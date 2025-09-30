@@ -15,19 +15,6 @@
     <description>scccy-scaffolding</description>
     <packaging>pom</packaging>
 
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <modules>
         <module>service</module>
     </modules>
@@ -48,7 +35,7 @@
         <aliyun-oss.version>3.17.4</aliyun-oss.version>
         <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
         <JUnit.version>5.10.1</JUnit.version>
-        <mysql.version>8.0.33</mysql.version>
+        <mysql.version>8.4.0</mysql.version>
         <springdoc.version>2.8.13</springdoc.version>
     </properties>
 
@@ -104,6 +91,13 @@
                 <version>${mybatis-plus.version}</version>
             </dependency>
 
+            <!-- MyBatis Plus Extension -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-extension</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
             <!-- FastJSON2 Spring6 Extension -->
             <dependency>
                 <groupId>com.alibaba.fastjson2</groupId>
@@ -133,6 +127,14 @@
                 <groupId>com.alibaba.fastjson2</groupId>
                 <artifactId>fastjson2</artifactId>
                 <version>${fastjson2.version}</version>
+            </dependency>
+
+
+            <!-- 阿里云OSS -->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${aliyun-oss.version}</version>
             </dependency>
 
         </dependencies>
@@ -223,13 +225,6 @@
         </dependency>
 
 
-
-
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc.version}</version>
-        </dependency>
 
 
         <dependency>

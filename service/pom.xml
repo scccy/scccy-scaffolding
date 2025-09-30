@@ -33,6 +33,7 @@
         <module>service-common</module>
         <module>service-base</module>
         <module>service-gateway</module>
+        <module>service-auth</module>
     </modules>
 
     <dependencies>
@@ -95,10 +96,6 @@
 
 
 
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-        </dependency>
 
 
         <!-- spring boot3 引入可选模块 -->
@@ -165,11 +162,6 @@
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
-        <!-- Springdoc webmvc 依赖配置 -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
     </dependencies>
 
     <dependencyManagement>

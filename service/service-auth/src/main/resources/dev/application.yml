@@ -1,0 +1,138 @@
+# 网关服务 - 开发环境主配置文件
+# 注意：业务配置和敏感信息已移至Nacos配置中心
+
+# 服务器配置
+server:
+  port: 8081
+  # 性能优化配置 - 解决第二次请求超时问题
+  connection-timeout: 10000  # 连接超时时间（毫秒）
+  read-timeout: 15000        # 读取超时时间（毫秒）
+  write-timeout: 15000       # 写入超时时间（毫秒）
+  max-connections: 4096      # 最大连接数
+  threads:
+    max: 100                 # 最大线程数
+    min: 10                  # 最小线程数
+  servlet:
+    context-path: /
+
+
+# Spring基础配置
+spring:
+  # 应用名称
+  application:
+    name: service-auth
+  
+  # 配置导入 - 从Nacos加载配置
+  config:
+    import: 
+      - nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension}
+
+  
+  # Nacos服务注册与发现配置
+  cloud:
+    nacos:
+      # 服务发现配置
+      discovery:
+        server-addr: 117.50.197.170:8848
+        username: nacos
+        password: IruggNHvNr
+        namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+        group: DEFAULT_GROUP
+        # 注册配置
+        register-enabled: true
+        # 心跳间隔
+        heart-beat-interval: 5000
+        # 心跳超时时间
+        heart-beat-timeout: 15000
+        # 实例删除超时时间
+        ip-delete-timeout: 30000
+      
+      # 配置中心配置
+      config:
+        server-addr: 117.50.197.170:8848
+        username: nacos
+        password: IruggNHvNr
+        namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # 配置刷新
+        refresh-enabled: true
+        # 配置超时时间
+        timeout: 3000
+        # 配置重试次数
+        retry-time: 2000
+        # 长轮询超时时间
+        long-poll-timeout: 46000
+    
+    # 负载均衡器配置
+    loadbalancer:
+      # 启用负载均衡器
+      enabled: true
+      # 配置负载均衡器
+      ribbon:
+        enabled: false  # 禁用Ribbon，使用Spring Cloud LoadBalancer
+      # 负载均衡器超时配置
+      retry:
+        enabled: true
+        max-retries: 2
+        retryable-status-codes: 500,502,503,504
+
+
+
+  # 启动性能优化（开发环境）
+  main:
+    lazy-initialization: true  # 开发环境启用懒加载
+    allow-bean-definition-overriding: false  # 禁止Bean定义覆盖
+    # web-application-type: servlet  # 默认使用Servlet Web应用
+  
+
+
+  # JMX配置
+  jmx:
+    enabled: false  # 开发环境关闭JMX
+
+  # 配置管理 - 使用Nacos远程配置管理
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+  # 应用信息配置
+  info:
+    env:
+      enabled: true
+    git:
+      mode: full
+
+
+
+
+# 日志配置（开发环境详细日志）
+logging:
+  config: classpath:log4j2.xml
+  level:
+    com.origin.gateway: debug
+    org.springframework.cloud.gateway: debug
+    org.springframework.web: debug
+    # 禁用Log4j2包扫描警告
+    org.apache.logging.log4j.status: ERROR
+    org.apache.logging.log4j.core.config: ERROR
+    # 禁用Netty DNS解析器警告
+    io.netty.resolver.dns: DEBUG
+    root: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/service-gateway.log
+    max-size: 100MB
+    max-history: 30
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
