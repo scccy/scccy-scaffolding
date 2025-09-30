@@ -33,6 +33,7 @@ Thumbs.db
 logs/
 *.log
 *.log.*
+.gitmodules
 
 # Spring Boot
 application-*.yml
