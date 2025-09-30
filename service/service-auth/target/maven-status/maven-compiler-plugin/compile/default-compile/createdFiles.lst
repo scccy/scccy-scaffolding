@@ -1,0 +1,4 @@
+com/scccy/service/auth/AuthApplication.class
+com/scccy/service/auth/service/impl/FeishuServiceImpl.class
+com/scccy/service/auth/controller/TokenController.class
+com/scccy/service/auth/service/FeishuService.class
