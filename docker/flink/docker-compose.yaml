@@ -1,0 +1,45 @@
+services:
+  jobmanager:
+    image: flink:2.0-scala_2.12-java21
+    container_name: flink-jobmanager
+    command: jobmanager
+    ports:
+      - "6123:6123"   # RPC
+      - "8088:8081"   # Web UI
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        rest.bind-address: 0.0.0.0
+        jobmanager.bind-host: 0.0.0.0
+        taskmanager.numberOfTaskSlots: 2
+    volumes:
+      - ./flink-logs/jobmanager:/opt/flink/log   # 官方镜像日志目录
+      - ./flink-logs/log4j2.properties:/opt/flink/conf/log4j2.properties:ro
+    networks:
+      - bigdatanetwork
+
+  taskmanager:
+    image: flink:2.0-scala_2.12-java21
+    container_name: flink-taskmanager
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    ports:
+      - "6121:6121"
+      - "6122:6122"
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        taskmanager.bind-host: 0.0.0.0
+        taskmanager.host: taskmanager
+        taskmanager.numberOfTaskSlots: 2
+        taskmanager.registration.timeout: 60 s
+    volumes:
+      - ./flink-logs/taskmanager:/opt/flink/log   # 官方镜像日志目录
+      - ./flink-logs/log4j2.properties:/opt/flink/conf/log4j2.properties:ro
+    networks:
+      - bigdatanetwork
+
+networks:
+  bigdatanetwork:
+    external: true

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Zipkin 服务器（连接到外部 MySQL）
+  # 参考官方文档: https://github.com/openzipkin/zipkin
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: zipkin-server
+    ports:
+      - "9411:9411"
+    environment:
+      # 使用外部 MySQL 服务器
+      # 官方 MySQL 配置文档: https://github.com/openzipkin/zipkin/tree/master/zipkin-storage/zipkin-storage-mysql-v1
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=${MYSQL_HOST:-127.0.0.1}
+      - MYSQL_TCP_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_USER=${MYSQL_USER:-zipkin}
+      - MYSQL_PASS=${MYSQL_PASSWORD:-XdiwWEW15e}
+      - MYSQL_DB=${MYSQL_DATABASE:-zipkin}
+      - MYSQL_USE_SSL=${MYSQL_USE_SSL:-false}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9411/health"]
+      timeout: 10s
+      retries: 5
