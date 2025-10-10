@@ -17,3 +17,6 @@
 	path = service/service-gateway
 	url = https://github.com/scccy/service-gateway.git
 	branch = main
+[submodule "service/service-feishu"]
+	path = service/service-feishu
+	url = https://github.com/scccy/service-feishu.git
