@@ -34,6 +34,7 @@
         <module>service-base</module>
         <module>service-gateway</module>
         <module>service-auth</module>
+        <module>service-feishu</module>
     </modules>
 
     <dependencies>
