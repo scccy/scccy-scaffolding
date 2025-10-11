@@ -1,7 +1,9 @@
 package com.scccy.common.log.aspect;
 
-import com.scccy.service.common.log.annotation.LogOperation;
+
+import com.scccy.common.log.annotation.LogOperation;
 import lombok.extern.slf4j.Slf4j;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,7 +18,7 @@ import java.lang.reflect.Method;
  * 拦截带有 @LogOperation 注解的方法，记录操作日志
  *
  * @author scccy
- * @since 2024-01-01
+ * @since 2025-10-11
  */
 @Slf4j
 @Aspect
@@ -26,7 +28,7 @@ public class LogOperationAspect {
     /**
      * 环绕通知，记录方法执行日志
      */
-    @Around("@annotation(com.scccy.service.common.log.annotation.LogOperation)")
+    @Around("@annotation(com.scccy.common.log.annotation.LogOperation)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

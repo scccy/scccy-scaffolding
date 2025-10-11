@@ -1,8 +1,9 @@
 package com.scccy.common.base.exception;
 
-import com.scccy.service.common.dto.ResultData;
-import com.scccy.service.common.entity.ErrorCode;
-import com.scccy.service.common.exception.BusinessException;
+
+import com.scccy.common.modules.dto.ResultData;
+import com.scccy.common.modules.entity.ErrorCode;
+import com.scccy.common.modules.exception.BusinessException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

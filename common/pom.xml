@@ -16,6 +16,8 @@
         <module>common-modules</module>
         <module>common-base</module>
         <module>common-log</module>
+        <module>common-knife4j</module>
+
     </modules>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

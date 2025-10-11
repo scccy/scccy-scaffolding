@@ -7,7 +7,7 @@ import java.lang.annotation.*;
  * 用于标记需要记录操作日志的方法
  *
  * @author scccy
- * @since 2024-01-01
+ * @since 2025-10-11
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

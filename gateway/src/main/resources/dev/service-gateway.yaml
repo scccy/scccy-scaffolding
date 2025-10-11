@@ -1,0 +1,135 @@
+# 网关服务 - Nacos远程配置文件
+# 配置ID: service-gateway.yaml
+# 配置组: DEFAULT_GROUP
+# 命名空间: ba1493dc-20fa-413b-84e1-d929c9a4aeac
+
+# 服务器性能配置
+server:
+  connection-timeout: ${GATEWAY_CONNECTION_TIMEOUT:10000}
+  read-timeout: ${GATEWAY_READ_TIMEOUT:15000}
+  write-timeout: ${GATEWAY_WRITE_TIMEOUT:15000}
+  max-connections: ${GATEWAY_MAX_CONNECTIONS:4096}
+  threads:
+    max: ${GATEWAY_THREADS_MAX:100}
+    min: ${GATEWAY_THREADS_MIN:10}
+
+# Spring Cloud Gateway配置
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"   # 注意是 patterns
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: false
+
+      # 路由配置
+      routes:
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://service-auth
+          predicates:
+            - Path=/service/auth/**
+          filters:
+            - StripPrefix=0
+            - AddRequestHeader=X-Gateway-Source, service-gateway
+            - AddRequestHeader=X-Service-Name, service-auth
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://service-user
+          predicates:
+            - Path=/service/user/**
+          filters:
+            - StripPrefix=0
+            - AddRequestHeader=X-Gateway-Source, service-gateway
+            - AddRequestHeader=X-Service-Name, service-user
+
+        # 发布者服务路由
+        - id: publisher-service
+          uri: lb://core-publisher
+          predicates:
+            - Path=/core/publisher/**
+          filters:
+            - StripPrefix=0
+            - AddRequestHeader=X-Gateway-Source, service-gateway
+            - AddRequestHeader=X-Service-Name, core-publisher
+
+        # OSS文件服务路由
+        - id: oss-service
+          uri: lb://third-party-aliyunOss
+          predicates:
+            - Path=/tp/oss/**
+          filters:
+            - StripPrefix=0
+            - AddRequestHeader=X-Gateway-Source, service-gateway
+            - AddRequestHeader=X-Service-Name, third-party-aliyunOss
+
+
+# 网关特定配置
+
+# 性能优化配置
+performance:
+  # 连接池配置
+  connection-pool:
+    max-connections: ${GATEWAY_MAX_CONNECTIONS:4096}
+    max-idle-time: ${GATEWAY_MAX_IDLE_TIME:30000}
+    acquire-timeout: ${GATEWAY_ACQUIRE_TIMEOUT:5000}
+
+  # 线程池配置
+  thread-pool:
+    core-size: ${GATEWAY_THREAD_CORE_SIZE:10}
+    max-size: ${GATEWAY_THREAD_MAX_SIZE:20}
+    queue-capacity: ${GATEWAY_THREAD_QUEUE_CAPACITY:500}
+    keep-alive-seconds: ${GATEWAY_THREAD_KEEP_ALIVE:60}
+
+# 监控配置
+monitoring:
+  # 健康检查配置
+  health:
+    check-interval: ${HEALTH_CHECK_INTERVAL:30}  # 健康检查间隔（秒）
+    timeout: ${HEALTH_CHECK_TIMEOUT:5000}  # 健康检查超时时间（毫秒）
+
+  # 指标配置
+  metrics:
+    enabled: ${METRICS_ENABLED:true}
+    export:
+      prometheus:
+        enabled: ${PROMETHEUS_ENABLED:true}
+        descriptions: true
+        step: 60s
+
+knife4j:
+  gateway:
+    enabled: true
+    # 指定服务发现的模式聚合微服务文档
+    strategy: discover
+    discover:
+      enabled: true
+      # 指定版本号(Swagger2|OpenAPI3)
+      version : openapi3
+      # 需要排除的微服务(eg:网关服务)
+      excluded-services:
+        - gateway-service
+      # 各个聚合服务的个性化配置，key:注册中心中的服务名称，value：个性化配置
+      service-config:
+        user-service:
+          # 排序
+          order: 1
+          # 前端显示名称
+          group-name : 用户服务
+          # 重新指定basePath，一般在OpenAPI3规范中需要
+          context-path: /user
+        order-service:
+          # 排序
+          order: 2
+          # 前端显示名称
+          group-name : 订单服务
+          # 重新指定basePath，一般在OpenAPI3规范中需要
+          context-path: /order

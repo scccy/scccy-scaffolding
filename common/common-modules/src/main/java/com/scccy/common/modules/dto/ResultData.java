@@ -135,20 +135,7 @@ public class ResultData<T> {
             .setMessage(message)
             .setData(data);
     }
-    
-    /**
-     * 失败响应（使用ErrorCode）
-     * 
-     * @param <T> 数据类型
-     * @param errorCode 错误码枚举
-     * @return 失败响应结果
-     */
-    public static <T> ResultData<T> fail(ErrorCode errorCode) {
-        return new ResultData<T>()
-            .setCode(errorCode.getCode())
-            .setMessage(errorCode.getMessage());
-    }
-    
+
     /**
      * 失败响应（使用ErrorCode和自定义消息）
      * 
@@ -162,58 +149,6 @@ public class ResultData<T> {
             .setCode(errorCode.getCode())
             .setMessage(message);
     }
-    
-    /**
-     * 失败响应（使用ErrorCode、自定义消息和数据）
-     * 
-     * @param <T> 数据类型
-     * @param errorCode 错误码枚举
-     * @param message 自定义错误消息
-     * @param data 错误数据
-     * @return 失败响应结果
-     */
-    public static <T> ResultData<T> fail(ErrorCode errorCode, String message, T data) {
-        return new ResultData<T>()
-            .setCode(errorCode.getCode())
-            .setMessage(message)
-            .setData(data);
-    }
-
-    // ==================== 兼容性方法 ====================
-    
-    /**
-     * 兼容旧版本的ok方法
-     * 
-     * @param <T> 数据类型
-     * @return 成功响应结果
-     */
-    public static <T> ResultData<T> ok() {
-        return success();
-    }
-    
-    /**
-     * 兼容旧版本的ok方法（带消息和数据）
-     * 
-     * @param <T> 数据类型
-     * @param message 响应消息
-     * @param data 响应数据
-     * @return 成功响应结果
-     */
-    public static <T> ResultData<T> ok(String message, T data) {
-        return success(message, data);
-    }
-
-    /**
-     * 兼容旧版本的ok方法（带消息）
-     * 
-     * @param <T> 数据类型
-     * @param message 响应消息
-     * @return 成功响应结果
-     */
-    public static <T> ResultData<T> ok(String message) {
-        return success(message, null);
-    }
-
 
 
 }
