@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResultData<Object> handleRuntimeException(RuntimeException e) {
         log.error("运行时异常: ", e);
-        return ResultData.fail(ErrorCode.INTERNAL_ERROR, "系统内部错误");
+        return ResultData.fail(ErrorCode.INTERNAL_ERROR, e.getMessage());
     }
 
     /**

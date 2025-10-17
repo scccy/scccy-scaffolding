@@ -43,7 +43,7 @@ public class ResultData<T> {
      * @param <T> 数据类型
      * @return 成功响应结果
      */
-    public static <T> ResultData<T> success() {
+    public static <T> ResultData<T> ok() {
         return new ResultData<T>()
             .setCode(200)
             .setMessage("SUCCESS");
@@ -56,7 +56,7 @@ public class ResultData<T> {
      * @param data 响应数据
      * @return 成功响应结果
      */
-    public static <T> ResultData<T> success(T data) {
+    public static <T> ResultData<T> ok(T data) {
         return new ResultData<T>()
             .setCode(200)
             .setMessage("SUCCESS")
@@ -71,7 +71,7 @@ public class ResultData<T> {
      * @param data 响应数据
      * @return 成功响应结果
      */
-    public static <T> ResultData<T> success(String message, T data) {
+    public static <T> ResultData<T> ok(String message, T data) {
         return new ResultData<T>()
             .setCode(200)
             .setMessage(message)

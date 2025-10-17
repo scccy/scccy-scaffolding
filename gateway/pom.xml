@@ -16,18 +16,19 @@
 
     <dependencies>
 
-        <!-- Service common - 提供Spring基础配置和通用工具 -->
-        <dependency>
-            <groupId>com.scccy</groupId>
-            <artifactId>common-modules</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.baomidou</groupId>
-                    <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+<!--        &lt;!&ndash; Service common - 提供Spring基础配置和通用工具 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.scccy</groupId>-->
+<!--            <artifactId>common-modules</artifactId>-->
+<!--            <version>0.0.1-SNAPSHOT</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>com.baomidou</groupId>-->
+<!--                    <artifactId>mybatis-plus-spring-boot3-starter</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.scccy</groupId>
             <artifactId>common-log</artifactId>
@@ -40,6 +41,7 @@
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
         </dependency>
+
 
         <!-- Spring Cloud Gateway -->
         <dependency>

@@ -50,9 +50,26 @@ public class TracingAutoConfiguration {
 
             @Data
             public static class Tracing {
-                private String endpoint = "http://localhost:9411/api/v2/spans";
+                private String endpoint = "http://117.50.197.170:9411/api/v2/spans";
             }
         }
+    }
+
+    /**
+     * 配置 Micrometer Tracing 属性
+     * 通过系统属性设置 Micrometer Tracing 的配置
+     */
+    @Bean
+    @ConditionalOnProperty(name = "management.tracing.enabled", havingValue = "true", matchIfMissing = true)
+    public TracingPropertiesConfigurer tracingPropertiesConfigurer(
+            TracingProperties properties,
+            @Value("${spring.application.name:unknown}") String applicationName) {
+        
+        // 设置系统属性，让 Spring Boot 的自动配置生效
+        System.setProperty("management.tracing.sampling.probability", String.valueOf(properties.getSampling().getProbability()));
+        System.setProperty("management.zipkin.tracing.endpoint", properties.getZipkin().getTracing().getEndpoint());
+        System.setProperty("spring.application.name", applicationName);
+        return new TracingPropertiesConfigurer(properties);
     }
 
     /**
@@ -64,7 +81,8 @@ public class TracingAutoConfiguration {
     public TracingInitializer tracingInitializer(
             TracingProperties properties,
             @Value("${spring.application.name:unknown}") String applicationName) {
-        
+
+        // 同时使用日志输出
         log.info("=== Micrometer Tracing 自动配置 ===");
         log.info("应用名称: {}", applicationName);
         log.info("启用状态: {}", properties.isEnabled());
@@ -80,5 +98,12 @@ public class TracingAutoConfiguration {
      * 负责初始化追踪相关的配置
      */
     public record TracingInitializer(TracingProperties properties) {
+    }
+
+    /**
+     * 追踪属性配置器
+     * 负责设置系统属性以启用 Micrometer Tracing
+     */
+    public record TracingPropertiesConfigurer(TracingProperties properties) {
     }
 }

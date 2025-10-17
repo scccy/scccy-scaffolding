@@ -4,10 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * OkHttp3管理器 - 简化版本
@@ -35,15 +37,43 @@ public class OkHttpManager {
      * GET请求 - 返回JSONObject（带请求头）
      */
     public JSONObject get(String url, Map<String, Object> headers) throws IOException {
+        // 调用带参数的版本，params 传 null
+        return get(url, headers, null);
+    }
+
+    /**
+     * GET请求 - 返回JSONObject（带请求头和参数）
+     */
+    public JSONObject get(String url, Map<String, Object> headers, Map<String, Object> params) throws IOException {
+        // 拼接URL参数
+        if (params != null && !params.isEmpty()) {
+            StringBuilder sb = new StringBuilder(url);
+            if (!url.contains("?")) {
+                sb.append("?");
+            } else if (!url.endsWith("&")) {
+                sb.append("&");
+            }
+
+            sb.append(params.entrySet().stream()
+                    .map(entry -> entry.getKey() + "=" + URLEncoder.encode(String.valueOf(entry.getValue()), StandardCharsets.UTF_8))
+                    .collect(Collectors.joining("&")));
+            url = sb.toString();
+        }
+
+        // 构建请求
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
+        // 添加请求头
         if (headers != null) {
             headers.forEach((key, value) -> requestBuilder.addHeader(key, String.valueOf(value)));
         }
 
         Request request = requestBuilder.build();
+
+        // 执行请求
         String responseBody = executeRequest(request);
 
+        // 解析返回
         return parseResponse(responseBody);
     }
 
@@ -51,13 +81,13 @@ public class OkHttpManager {
      * POST请求 - JSON数据，返回JSONObject
      */
     public JSONObject post(String url, Map<String, Object> param) throws IOException {
-        return post(url, param, null);
+        return post(url,null,param);
     }
 
     /**
      * POST请求 - JSON数据，返回JSONObject（带请求头）
      */
-    public JSONObject post(String url, Map<String, Object> param, Map<String, Object> headers) throws IOException {
+    public JSONObject post(String url,  Map<String, Object> headers,Map<String, Object> param) throws IOException {
         String jsonData = JSON.toJSONString(param);
         RequestBody requestBody = RequestBody.create(jsonData, MediaType.get("application/json; charset=utf-8"));
 

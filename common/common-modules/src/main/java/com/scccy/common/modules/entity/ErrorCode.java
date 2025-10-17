@@ -1,9 +1,12 @@
 package com.scccy.common.modules.entity;
 
+import lombok.Getter;
+
 /**
  * 错误码枚举
  * 定义系统中所有可能的错误码
  */
+@Getter
 public enum ErrorCode {
     
     // 成功
@@ -157,12 +160,5 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
     }
-    
-    public int getCode() {
-        return code;
-    }
-    
-    public String getMessage() {
-        return message;
-    }
+
 } 

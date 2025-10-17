@@ -22,31 +22,31 @@ public abstract class BaseEntity implements Serializable {
     /**
      * 创建人ID
      */
-    @TableField(value = "created_by", fill = FieldFill.INSERT)
-    private String createdBy;
+    @TableField(value = "create_by", fill = FieldFill.INSERT)
+    private String createBy;
 
     /**
      * 创建时间
      */
-    @TableField(value = "created_time", fill = FieldFill.INSERT)
-    private LocalDateTime createdTime;
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
     /**
      * 更新人ID
      */
-    @TableField(value = "updated_by", fill = FieldFill.INSERT_UPDATE)
-    private String updatedBy;
+    @TableField(value = "update_by", fill = FieldFill.INSERT_UPDATE)
+    private String updateBy;
 
     /**
      * 更新时间
      */
-    @TableField(value = "updated_time", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedTime;
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
 
     /**
      * 是否删除：0-未删除，1-已删除
      */
     @TableLogic
-    @TableField("deleted")
-    private Integer deleted;
+    @TableField("del_flag")
+    private Integer delFlag;
 } 

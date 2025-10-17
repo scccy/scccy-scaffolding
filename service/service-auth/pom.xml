@@ -17,19 +17,18 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>com.scccy</groupId>
-            <artifactId>service-base</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
+
+
 
         <dependency>
-            <groupId>com.larksuite.oapi</groupId>
-            <artifactId>oapi-sdk</artifactId>
-            <version>2.4.24</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
+
 
     </dependencies>
+
 
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -37,14 +36,8 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
+
 </project>

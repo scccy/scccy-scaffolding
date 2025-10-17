@@ -4,21 +4,12 @@
 # 服务器配置
 server:
   port: 8080
-  # 性能优化配置 - 解决第二次请求超时问题
-  connection-timeout: 10000  # 连接超时时间（毫秒）
-  read-timeout: 15000        # 读取超时时间（毫秒）
-  write-timeout: 15000       # 写入超时时间（毫秒）
-  max-connections: 4096      # 最大连接数
-  threads:
-    max: 100                 # 最大线程数
-    min: 10                  # 最小线程数
-
 
 # Spring基础配置
 spring:
   # 应用名称
   application:
-    name: service-gateway
+    name: gateway
   
   # 配置导入 - 从Nacos加载配置
   config:
@@ -26,7 +17,7 @@ spring:
       - nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension}
 
   
-  # Nacos服务注册与发现配置
+# Nacos服务注册与发现配置
   cloud:
     nacos:
       # 服务发现配置
@@ -75,45 +66,19 @@ spring:
         max-retries: 2
         retryable-status-codes: 500,502,503,504
 
-    # Spring Cloud Gateway 配置
-    gateway:
-      # 全局超时配置
-      httpclient:
-        connect-timeout: 10000  # 连接超时时间（毫秒）
-        response-timeout: 15000 # 响应超时时间（毫秒）
-        pool:
-          max-connections: 200  # 最大连接数
-          max-idle-time: 30000  # 最大空闲时间（毫秒）
-          acquire-timeout: 5000 # 获取连接超时时间（毫秒）
+
 
 
   # 启动性能优化（开发环境）
   main:
     lazy-initialization: true  # 开发环境启用懒加载
     allow-bean-definition-overriding: false  # 禁止Bean定义覆盖
-    web-application-type: reactive  # 明确指定为响应式Web应用
-  
+    # web-application-type: servlet  # 默认使用Servlet Web应用
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 
-  # JMX配置
-  jmx:
-    enabled: false  # 开发环境关闭JMX
 
-  # 配置管理 - 使用Nacos远程配置管理
-
-# 管理端点配置
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,gateway
-  endpoint:
-    health:
-      show-details: always
-  # 应用信息配置
-  info:
-    env:
-      enabled: true
-    git:
-      mode: full
 

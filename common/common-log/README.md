@@ -35,8 +35,17 @@
 
 默认配置：
 - 采样率：10%
-- Zipkin 端点：http://localhost:9411/api/v2/spans
+- Zipkin 端点：http://117.50.197.170:9411/api/v2/spans
 - 自动启用链路追踪
+
+### 自动配置原理
+
+`common-log` 模块通过以下方式实现自动配置：
+
+1. **依赖管理**：包含所有必要的 Micrometer Tracing 依赖
+2. **自动配置类**：`TracingAutoConfiguration` 自动设置系统属性
+3. **Spring Boot 集成**：利用 Spring Boot 的 Micrometer Tracing 自动配置机制
+4. **日志集成**：Log4j2 配置自动包含 traceId 和 spanId
 
 ### 2. 日志格式配置
 

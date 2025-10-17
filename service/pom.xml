@@ -16,28 +16,37 @@
     <description>微服务模块 - 包含所有业务服务和基础模块</description>
 
 
-
     <modules>
         <module>service-feishu</module>
+        <module>service-wechatwrok</module>
+        <module>service-demo</module>
+        <module>service-auth</module>
+<!--        <module>service-system</module>-->
     </modules>
+
 
     <dependencies>
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
+            <groupId>com.scccy</groupId>
+            <artifactId>common-base</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- spring boot3 引入可选模块 -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <groupId>com.scccy</groupId>
+            <artifactId>common-log</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
-        <!-- jdk 11+ 引入可选模块 -->
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-jsqlparser</artifactId>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
         </dependency>
+
 
 
         <!-- Nacos Discovery -->
@@ -57,7 +66,8 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
+
+
+
     </dependencies>
-
-
 </project>

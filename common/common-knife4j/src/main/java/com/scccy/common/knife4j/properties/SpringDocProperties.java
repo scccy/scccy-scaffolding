@@ -1,11 +1,12 @@
 package com.scccy.common.knife4j.properties;
 
-
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.License;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.License;
+
+
 /**
  * Swagger 配置属性
  *
@@ -66,4 +67,3 @@ public class SpringDocProperties
         private String version = null;
     }
 }
-
