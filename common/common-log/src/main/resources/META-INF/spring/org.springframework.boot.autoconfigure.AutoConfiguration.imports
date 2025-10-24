@@ -1,2 +1,3 @@
+com.scccy.common.log.config.TracingProperties
 com.scccy.common.log.config.TracingAutoConfiguration
 

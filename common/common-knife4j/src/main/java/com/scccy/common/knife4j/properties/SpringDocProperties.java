@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 /**
  * Swagger 配置属性
  *
- * @author ruoyi
+ * @author scccy
  */
 @Data
 @ConfigurationProperties(prefix = "springdoc")

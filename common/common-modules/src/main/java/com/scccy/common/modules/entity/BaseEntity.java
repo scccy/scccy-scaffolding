@@ -3,9 +3,12 @@ package com.scccy.common.modules.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.scccy.common.modules.utils.EntityModelConverter;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 
 /**
@@ -15,8 +18,9 @@ import java.time.LocalDateTime;
  * @since 2025-07-31
  */
 @Data
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity<V> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -49,4 +53,8 @@ public abstract class BaseEntity implements Serializable {
     @TableLogic
     @TableField("del_flag")
     private Integer delFlag;
+
+    public V toVo(Class<V> clazz) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
+        return (V)(EntityModelConverter.getInstance().convert(this, clazz));
+    }
 } 

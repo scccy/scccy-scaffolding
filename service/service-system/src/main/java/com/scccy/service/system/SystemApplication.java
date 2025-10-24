@@ -1,23 +1,34 @@
-package com.scccy.service.system;
+package com.scccy.service.feishu;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication(scanBasePackages = {"com.scccy.service","com.scccy.common"})
-@Slf4j
+/**
+ * 飞书相关
+ *
+ * @author scccy
+ */
+
+@SpringBootApplication(scanBasePackages = {"com.scccy.service", "com.scccy.common"})
 @EnableDiscoveryClient
-@MapperScan("com.scccy.service.**.mapper")
+@EnableConfigurationProperties
+@Slf4j
+@EnableAsync
+@MapperScan("com.scccy.service.**.dao.mapper")
+@EnableJpaRepositories
 public class SystemApplication {
 
-
     public static void main(String[] args) {
-
         System.setProperty("spring.application.name", "service-system");
 
-        SpringApplication.run(SystemApplication.class, args);
-    }
+        new SpringApplication(SystemApplication.class);
 
+
+    }
 }

@@ -1,0 +1,53 @@
+services:
+  banyandb:
+    image: docker.1ms.run/apache/skywalking-banyandb:0.8.0
+    container_name: banyandb
+    networks:
+      - java_framework
+    ports:
+      - "17913:17913"
+    command: standalone --stream-root-path /tmp/stream-data --measure-root-path /tmp/measure-data
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -nz 127.0.0.1 17912"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  oap:
+    image: docker.1ms.run/apache/skywalking-oap-server:10.2.0
+    container_name: oap
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    networks:
+      - java_framework
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    environment:
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      SW_HEALTH_CHECKER: default
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms2048m -Xmx2048m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:12800/internal/l7check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  ui:
+    image: docker.1ms.run/apache/skywalking-ui:10.2.0
+    container_name: ui
+    ports:
+      - "6001:8080"
+    networks:
+      - java_framework
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+      SW_ZIPKIN_ADDRESS: http://oap:9412
+
+networks:
+  java_framework:
+    external: true

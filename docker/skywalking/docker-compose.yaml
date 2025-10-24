@@ -1,0 +1,25 @@
+services:
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=117.50.197.170
+      - MYSQL_TCP_PORT=3306
+      - MYSQL_USER=zipkin
+      - MYSQL_PASS=XdiwWEW15e
+      - MYSQL_DB=zipkin
+      - MYSQL_USE_SSL=false
+    restart: unless-stopped
+    networks:
+      - skywalkingNet
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9411/health"]
+      timeout: 10s
+      retries: 5
+
+networks:
+  skywalkingNet:
+    driver: bridge

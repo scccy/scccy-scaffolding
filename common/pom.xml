@@ -18,6 +18,8 @@
         <module>common-log</module>
         <module>common-excel</module>
         <module>common-knife4j</module>
+        <module>common-wechatwork</module>
+        <module>common-redis-cache</module>
 
     </modules>
     <properties>

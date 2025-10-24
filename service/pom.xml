@@ -21,7 +21,7 @@
         <module>service-wechatwrok</module>
         <module>service-demo</module>
         <module>service-auth</module>
-<!--        <module>service-system</module>-->
+        <module>service-system</module>
     </modules>
 
 
