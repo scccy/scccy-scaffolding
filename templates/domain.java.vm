@@ -1,0 +1,52 @@
+## 引入宏定义
+$!{define.vm}
+
+## 使用宏定义设置回调（保存位置与文件后缀）
+#save("/domain/mp", "Mp.java")
+
+## 使用宏定义设置包后缀
+#setPackageSuffix("domain.mp")
+
+## 自动导入包
+$!{autoImport.vm}
+import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.Serial;
+
+## 类注释
+#tableComment("实体类")
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@TableName("$!{tool.hump2Underline($!{tableInfo.name})}")
+@Schema(
+    name = "$!{tableInfo.name}Mp",
+    description = "$!{tableInfo.comment} 实体类"
+)
+public class $!{tableInfo.name}Mp extends Model<$!{tableInfo.name}Mp> implements Serializable {
+    @Serial
+    private static final long serialVersionUID = $!tool.serial();
+
+#foreach($column in $tableInfo.fullColumn)
+    #if(${column.comment})
+    /**
+     * ${column.comment}
+     */#end
+
+    @Schema(description = "${column.comment != '' ? column.comment : column.name}")
+    #if($tableInfo.pkColumn.contains($column))
+    @TableId("$!{tool.hump2Underline($!{column.name})}")
+    #else
+    @TableField("$!{tool.hump2Underline($!{column.name})}")
+    #end
+    private $!{tool.getClsNameByFullName($column.type)} $!{column.name};
+
+#end
+}

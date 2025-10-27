@@ -1,0 +1,66 @@
+#if($tableInfo.pkColumn.size() > 1)
+/**
+ * $!{tableInfo.comment} 复合主键类
+ *
+ * <p>该类对应数据库表 {@code $!{tableInfo.name}} 的复合主键。
+ *
+ * <p>OpenAPI3 自动生成文档示例:
+ * <pre>
+ * {
+ *   "type": "object",
+ *   "properties": {
+#foreach($pk in $tableInfo.pkColumn)
+ *     "$!{pk.name}": {
+ *       "type": "$!{tool.getOpenApiType($pk.type)}",
+ *       "description": "$!{pk.comment != '' ? pk.comment : pk.name}"
+ *     }#if($foreach.hasNext),#end
+#end
+ *   }
+ * }
+ * </pre>
+ */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+@Embeddable
+@io.swagger.v3.oas.annotations.media.Schema(
+    name = "$!{tableInfo.name}IdJpa",
+    description = "$!{tableInfo.comment} 复合主键"
+)
+public class $!{tableInfo.name}IdJpa implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = $!tool.serial();
+
+#foreach($pk in $tableInfo.pkColumn)
+    @Size(max = 128)
+    @NotNull
+    @Column(name = "$!{tool.hump2Underline($pk.name)}", nullable = false, length = 128)
+    @io.swagger.v3.oas.annotations.media.Schema(
+        description = "$!{pk.comment != '' ? pk.comment : $pk.name}"
+    )
+    private $!{tool.getClsNameByFullName($pk.type)} $!{pk.name};
+#end
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        $!{tableInfo.name}IdJpa entity = ($!{tableInfo.name}IdJpa) o;
+#foreach($pk in $tableInfo.pkColumn)
+        if (!Objects.equals(this.$!{pk.name}, entity.$!{pk.name})) return false;
+#end
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+#foreach($pk in $tableInfo.pkColumn)
+            $!{pk.name}#if($foreach.hasNext),#end
+#end
+        );
+    }
+}
+#end

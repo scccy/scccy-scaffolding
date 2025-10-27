@@ -1,0 +1,51 @@
+## 导入宏定义
+$!{define.vm}
+
+## 设置文件后缀
+#setTableSuffix("ServiceImpl")
+
+## 保存路径
+#save("/service/mp/impl", "MpServiceImpl.java")
+
+## 包路径
+#setPackageSuffix("service.mp.impl")
+
+## 导入依赖包
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import $!{tableInfo.savePackageName}.dao.mapper.$!{tableInfo.name}Mapper;
+import $!{tableInfo.savePackageName}.domain.mp.$!{tableInfo.name}Mp;
+import $!{tableInfo.savePackageName}.service.mp.$!{tableInfo.name}MpService;
+import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
+## 表注释
+#tableComment("服务实现类")
+@Service
+public class $!{tableInfo.name}MpServiceImpl
+        extends ServiceImpl<$!{tableInfo.name}Mapper, $!{tableInfo.name}Mp>
+        implements $!{tableInfo.name}MpService {
+
+        @Override
+        public Page<$!{tableInfo.name}Mp> page(Integer pageNum, Integer pageSize, $!{tableInfo.name}Mp $!{tool.firstLowerCase($!{tableInfo.name})}Mp) {
+                Page<$!{tableInfo.name}Mp> page = new Page<>(pageNum, pageSize);
+                QueryWrapper<$!{tableInfo.name}Mp> wrapper = new QueryWrapper<>();
+
+                #foreach($column in $tableInfo.fullColumn)
+                        #set($colMethod = $tool.firstUpperCase($column.name))
+                        #set($colName = $tool.hump2Underline($column.name))
+                        #if($column.type == "java.lang.String")
+                if($!{tool.firstLowerCase($!{tableInfo.name})}Mp.get$!{colMethod}() != null && !$!{tool.firstLowerCase($!{tableInfo.name})}Mp.get$!{colMethod}().isEmpty()) {
+                        wrapper.like("$!{colName}", $!{tool.firstLowerCase($!{tableInfo.name})}Mp.get$!{colMethod}());
+                }
+                        #else
+                if($!{tool.firstLowerCase($!{tableInfo.name})}Mp.get$!{colMethod}() != null) {
+                        wrapper.eq("$!{colName}", $!{tool.firstLowerCase($!{tableInfo.name})}Mp.get$!{colMethod}());
+                }
+                        #end
+                #end
+
+                return this.page(page, wrapper);
+        }
+
+}

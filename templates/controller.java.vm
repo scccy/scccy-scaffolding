@@ -1,0 +1,284 @@
+$!{define.vm}
+
+#set($tableSuffix = "Controller")
+#save("/controller", "Controller.java")
+#setPackageSuffix("controller")
+
+$!{autoImport.vm}
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import $!{tableInfo.savePackageName}.dao.service.$!{tableInfo.name}MpService;
+import $!{tableInfo.savePackageName}.domain.mp.$!{tableInfo.name}Mp;
+import com.scccy.common.modules.dto.ResultData;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
+#set($pkCount = $tableInfo.pkColumn.size())
+#if($pkCount > 1)
+import $!{tableInfo.savePackageName}.domain.jpa.$!{tableInfo.name}Jpa;
+import $!{tableInfo.savePackageName}.domain.jpa.$!{tableInfo.name}IdJpa;
+import $!{tableInfo.savePackageName}.dao.repository.$!{tableInfo.name}Repository;
+#else
+import $!{tableInfo.savePackageName}.domain.mp.$!{tableInfo.name}Mp;
+    #set($pk = $tableInfo.pkColumn.get(0))
+#end
+
+#if($pkCount > 1)
+/**
+ * $!{tableInfo.comment} 控制器（联合主键，使用 JPA Repository 进行部分 CRUD；分页/列表使用 MyBatis-Plus）
+ *
+ * @author $!author
+ * @date $!time.currTime()
+ */
+@RestController
+@RequestMapping("/$!tool.firstLowerCase($!{tableInfo.name})")
+public class $!{tableInfo.name}$!tableSuffix {
+
+    ## 定义局部变量避免嵌套 $!{}
+    #set($entityVar = $tool.firstLowerCase($tableInfo.name) + "Mp")
+    #set($entityClass = $tableInfo.name + "Mp")
+    #set($pkName = $tableInfo.pkColumn.get(0).name)
+@Autowired
+private $!{tableInfo.name}Repository $!{tool.firstLowerCase($!{tableInfo.name})}Repository;
+
+@Autowired
+private $!{tableInfo.name}MpService $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl;
+
+/**
+ * 新增（请求使用 Mp 实体 -> 转换为 JPA 实体后保存）
+ */
+@PostMapping
+public ResultData<?> save(@RequestBody $!{tableInfo.name}Mp mp) {
+    if (mp == null) return ResultData.fail("请求体不能为空");
+    // 构造复合主键对象
+        $!{tableInfo.name}IdJpa id = new $!{tableInfo.name}IdJpa();
+    #foreach($pk in $tableInfo.pkColumn)
+        id.set$!{tool.firstUpperCase($pk.name)}(mp.get$!{tool.firstUpperCase($pk.name)}());
+    #end
+
+    // 构造 JPA 实体并拷贝非主键字段
+        $!{tableInfo.name}Jpa entity = new $!{tableInfo.name}Jpa();
+    entity.setId(id);
+    #foreach($column in $tableInfo.otherColumn)
+        entity.set$!{tool.firstUpperCase($column.name)}(mp.get$!{tool.firstUpperCase($column.name)}());
+    #end
+
+        $!{tableInfo.name}Jpa saved = $!{tool.firstLowerCase($!{tableInfo.name})}Repository.save(entity);
+    return ResultData.ok(saved);
+}
+
+/**
+ * 根据复合主键逻辑删除（请求使用 Mp 实体，或只需在 body 中带主键字段）
+ */
+@DeleteMapping
+public ResultData<?> delete(@RequestBody $!{tableInfo.name}Mp mp) {
+    if (mp == null) {
+        return ResultData.fail("请求体不能为空");
+    }
+
+    // 构造 LambdaQueryWrapper
+    LambdaQueryWrapper<$!{tableInfo.name}Mp> wrapper = new LambdaQueryWrapper<>();
+    #foreach($pk in $tableInfo.pkColumn)
+        wrapper.eq($!{tableInfo.name}Mp::get$!{tool.firstUpperCase($pk.name)}, mp.get$!{tool.firstUpperCase($pk.name)}());
+    #end
+
+    boolean success = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.remove(wrapper); // 逻辑删除
+    if (success) {
+        return ResultData.ok("删除成功");
+    } else {
+        return ResultData.fail("删除失败或记录不存在");
+    }
+}
+
+/**
+ * 批量删除（JPA）—— 接收 Mp 实体列表（从每个 Mp 中抽取主键并删除）
+ */
+@DeleteMapping("/batch")
+public ResultData<?> deleteBatch(@RequestBody List<$!{tableInfo.name}Mp> mps) {
+    if (mps == null || mps.isEmpty()) return ResultData.fail("主键列表为空");
+    mps.forEach(mp -> {
+            $!{tableInfo.name}IdJpa id = new $!{tableInfo.name}IdJpa();
+        #foreach($pk in $tableInfo.pkColumn)
+            id.set$!{tool.firstUpperCase($pk.name)}(mp.get$!{tool.firstUpperCase($pk.name)}());
+        #end
+            $!{tool.firstLowerCase($!{tableInfo.name})}Repository.deleteById(id);
+    });
+    return ResultData.ok("批量删除成功");
+}
+
+/**
+ * 修改（请求使用 Mp 实体 -> 转换为 JPA 实体后保存）
+ */
+@PutMapping
+public ResultData<?> update(@RequestBody $!{tableInfo.name}Mp mp) {
+    if (mp == null) return ResultData.fail("请求体不能为空");
+        $!{tableInfo.name}IdJpa id = new $!{tableInfo.name}IdJpa();
+    #foreach($pk in $tableInfo.pkColumn)
+        id.set$!{tool.firstUpperCase($pk.name)}(mp.get$!{tool.firstUpperCase($pk.name)}());
+    #end
+
+        $!{tableInfo.name}Jpa entity = new $!{tableInfo.name}Jpa();
+    entity.setId(id);
+    #foreach($column in $tableInfo.otherColumn)
+        entity.set$!{tool.firstUpperCase($column.name)}(mp.get$!{tool.firstUpperCase($column.name)}());
+    #end
+
+        $!{tableInfo.name}Jpa saved = $!{tool.firstLowerCase($!{tableInfo.name})}Repository.save(entity);
+    return ResultData.ok(saved);
+}
+
+/**
+ * 根据复合主键查询（请求使用 Mp 实体或只在 body 中带主键字段）
+ */
+@PostMapping("/getById")
+public ResultData<$!{tableInfo.name}Jpa> getById(@RequestBody $!{tableInfo.name}Mp mp) {
+    if (mp == null) return ResultData.fail("请求体不能为空");
+        $!{tableInfo.name}IdJpa id = new $!{tableInfo.name}IdJpa();
+    #foreach($pk in $tableInfo.pkColumn)
+        id.set$!{tool.firstUpperCase($pk.name)}(mp.get$!{tool.firstUpperCase($pk.name)}());
+    #end
+    return $!{tool.firstLowerCase($!{tableInfo.name})}Repository.findById(id)
+            .map(ResultData::ok)
+            .orElseGet(() -> ResultData.fail("未查询到数据"));
+}
+
+/**
+ * 分页查询（支持所有字段的 like 查询）
+ */
+@PostMapping("/pageLike")
+public ResultData<Page<$!{entityClass}>> pageLike(
+        @RequestParam(defaultValue = "1") Integer pageNum,
+        @RequestParam(defaultValue = "10") Integer pageSize,
+    $!{entityClass} $!{entityVar}) {
+
+    // 分页逻辑已移至 ServiceImpl，控制器仅负责参数传递
+    Page<$!{entityClass}> resultPage = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.pageLike(pageNum, pageSize, $!{entityVar});
+    return ResultData.ok(resultPage);
+}
+
+/**
+ * 列表查询（等值）
+ */
+@PostMapping("/pageEq")
+public ResultData<Page<$!{entityClass}>> pageEq(
+        @RequestParam(defaultValue = "1") Integer pageNum,
+        @RequestParam(defaultValue = "10") Integer pageSize,
+    $!{entityClass} $!{entityVar}) {
+    // 分页逻辑已移至 ServiceImpl，控制器仅负责参数传递
+    Page<$!{entityClass}> resultPage =$!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.pageEq(pageNum, pageSize, $!{entityVar});
+    return ResultData.ok(resultPage);
+}
+
+/**
+ * 获取所有数据（无条件）
+ */
+@GetMapping("/all")
+public ResultData<List<$!{tableInfo.name}Mp>> all() {
+    List<$!{tableInfo.name}Mp> list = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.list();
+    return ResultData.ok(list);
+}
+}
+#else
+/**
+ * $!{tableInfo.comment} 控制器（单主键，使用 MyBatis-Plus Service 完整 CRUD）
+ *
+ * @author $!author
+ * @date $!time.currTime()
+ */
+@RestController
+@RequestMapping("/$!tool.firstLowerCase($!{tableInfo.name})")
+public class $!{tableInfo.name}$!tableSuffix {
+
+    ## 定义局部变量避免嵌套 $!{}
+    #set($entityVar = $tool.firstLowerCase($tableInfo.name) + "Mp")
+    #set($entityClass = $tableInfo.name + "Mp")
+    #set($pkName = $tableInfo.pkColumn.get(0).name)
+
+
+@Autowired
+private $!{tableInfo.name}MpService $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl;
+
+/**
+ * 新增
+ */
+@PostMapping
+public ResultData<?> save(@RequestBody $!{entityClass} $!{entityVar}) {
+    boolean result = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.save($!{entityVar});
+    return result ? ResultData.ok("新增成功") : ResultData.fail("新增失败");
+}
+
+/**
+ * 根据ID删除
+ */
+@DeleteMapping("/{id}")
+public ResultData<?> delete(@PathVariable Long id) {
+    boolean result = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.removeById(id);
+    return result ? ResultData.ok("删除成功") : ResultData.fail("删除失败");
+}
+
+/**
+ * 批量删除
+ */
+@DeleteMapping("/batch")
+public ResultData<?> deleteBatch(@RequestBody List<Long> ids) {
+    boolean result = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.removeByIds(ids);
+    return result ? ResultData.ok("批量删除成功") : ResultData.fail("批量删除失败");
+}
+
+/**
+ * 修改
+ */
+@PutMapping
+public ResultData<?> update(@RequestBody $!{entityClass} $!{entityVar}) {
+    boolean result = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.updateById($!{entityVar});
+    return result ? ResultData.ok("修改成功") : ResultData.fail("修改失败");
+}
+
+/**
+ * 根据ID查询
+ */
+@GetMapping("/{id}")
+public ResultData<$!{entityClass}> getById(@PathVariable Long id) {
+    $!{entityClass} entity = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.getById(id);
+    return ResultData.ok(entity);
+}
+
+/**
+ * 分页查询（支持所有字段的 like 查询）
+ */
+@PostMapping("/pageLike")
+public ResultData<Page<$!{entityClass}>> pageLike(
+        @RequestParam(defaultValue = "1") Integer pageNum,
+        @RequestParam(defaultValue = "10") Integer pageSize,
+    $!{entityClass} $!{entityVar}) {
+
+    // 分页逻辑已移至 ServiceImpl，控制器仅负责参数传递
+    Page<$!{entityClass}> resultPage = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.pageLike(pageNum, pageSize, $!{entityVar});
+    return ResultData.ok(resultPage);
+}
+
+/**
+ * 列表查询（等值）
+ */
+@PostMapping("/pageEq")
+public ResultData<Page<$!{entityClass}>> pageEq(
+        @RequestParam(defaultValue = "1") Integer pageNum,
+        @RequestParam(defaultValue = "10") Integer pageSize,
+    $!{entityClass} $!{entityVar}) {
+    // 分页逻辑已移至 ServiceImpl，控制器仅负责参数传递
+    Page<$!{entityClass}> resultPage = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.pageEq(pageNum, pageSize, $!{entityVar});
+    return ResultData.ok(resultPage);
+}
+
+/**
+ * 获取所有数据（无条件）
+ */
+@GetMapping("/all")
+public ResultData<List<$!{entityClass}>> all() {
+    List<$!{entityClass}> list = $!{tool.firstLowerCase($!{tableInfo.name})}MpServiceImpl.list();
+    return ResultData.ok(list);
+}
+}
+#end
