@@ -22,6 +22,7 @@
         <module>service-demo</module>
         <module>service-auth</module>
         <module>service-system</module>
+        <module>service-jackyun</module>
     </modules>
 
 
