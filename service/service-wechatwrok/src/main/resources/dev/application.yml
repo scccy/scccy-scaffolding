@@ -1,0 +1,113 @@
+wechatwork:
+  corpID: 1
+  corSecret: 1
+  baseUrl: https://qyapi.weixin.qq.com/cgi-bin/
+  token: 1
+  encodingAESKey: 1
+  coreSecretChat: 1
+  priKey: 132xxx
+
+
+
+# 服务器配置
+server:
+  port: 30002
+  servlet:
+    context-path: /
+
+
+# Spring基础配置
+spring:
+  # 应用名称
+  application:
+    name: service-wechatwork
+  
+# 配置导入 - 从Nacos加载配置
+  config:
+    import:
+      - nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension}
+
+
+  # Nacos服务注册与发现配置
+  cloud:
+    nacos:
+      # 服务发现配置
+      discovery:
+        server-addr: 117.50.197.170:8848
+        username: nacos
+        password: IruggNHvNr
+        namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+        group: DEFAULT_GROUP
+        # 注册配置
+        register-enabled: true
+        # 心跳间隔
+        heart-beat-interval: 5000
+        # 心跳超时时间
+        heart-beat-timeout: 15000
+        # 实例删除超时时间
+        ip-delete-timeout: 30000
+
+      # 配置中心配置
+      config:
+        server-addr: 117.50.197.170:8848
+        username: nacos
+        password: IruggNHvNr
+        namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # 配置刷新
+        refresh-enabled: true
+        # 配置超时时间
+        timeout: 3000
+        # 配置重试次数
+        retry-time: 2000
+        # 长轮询超时时间
+        long-poll-timeout: 46000
+
+    # 负载均衡器配置
+    loadbalancer:
+      # 启用负载均衡器
+      enabled: true
+      # 配置负载均衡器
+      ribbon:
+        enabled: false  # 禁用Ribbon，使用Spring Cloud LoadBalancer
+      # 负载均衡器超时配置
+      retry:
+        enabled: true
+        max-retries: 2
+        retryable-status-codes: 500,502,503,504
+
+
+
+  # 启动性能优化（开发环境）
+  main:
+    lazy-initialization: false  # 开发环境启用懒加载
+    allow-bean-definition-overriding: false  # 禁止Bean定义覆盖
+    # web-application-type: servlet  # 默认使用Servlet Web应用
+  servlet:
+    multipart:
+          max-file-size: 100MB
+          max-request-size: 100MB
+
+
+
+#  documents:
+#    - name: 标题1
+#      locations: classpath:markdown/*
+#      group: 测试
+#    - name: 标题2
+#      locations: classpath:markdown1/*
+#      group: 用户模块
+#  basic:
+#    enable: false
+#    username: abc
+#    password: 123
+#  insight:
+#    enable: true
+#    service-name: boot3
+#    secret: S6CsnS8AnPVyb8vvChcdXm4R3p6A6KlAISxBg3IIEgk=
+#    server: http://localhost:10086
+#    namespace: spring3
+
+
+
