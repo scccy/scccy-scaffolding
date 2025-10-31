@@ -16,7 +16,7 @@ spring:
     import: 
       - nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension}
 
-  
+
 # Nacos服务注册与发现配置
   cloud:
     nacos:

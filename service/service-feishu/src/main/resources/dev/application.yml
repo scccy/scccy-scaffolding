@@ -1,7 +1,7 @@
 
 feishu:
-  corpID: 1
-  corSecret: 1
+  appId: 1
+  appSecret: 1
   baseUrl: https://qyapi.weixin.qq.com/cgi-bin/
   token: 1
   encodingAESKey: 1

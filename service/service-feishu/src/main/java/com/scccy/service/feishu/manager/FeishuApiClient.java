@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.StandardCharsets;
 
@@ -24,7 +25,12 @@ import java.nio.charset.StandardCharsets;
 public class FeishuApiClient {
     
     private Client client;
-    private FeishuProperties feishuProperties;
+    private final FeishuProperties feishuProperties;
+
+    @Autowired
+    public FeishuApiClient(FeishuProperties feishuProperties) {
+        this.feishuProperties = feishuProperties;
+    }
 
     /**
      * 初始化飞书客户端

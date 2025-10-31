@@ -15,19 +15,14 @@ public  class FeishuProperties {
 
 
 
-    @Value("${feishu.corpID}")
+    @Value("${feishu.appId}")
     private  String appId ;
-    @Value("${feishu.corSecret}")
+    @Value("${feishu.appSecret}")
     private  String appSecret ;
     @Value("${feishu.baseUrl}")
     private  String larkBaseUrl ;
-    @Value("${feishu.token}")
-    private  String token ;
-    private  String encodingAESKey;
-    @Value("${feishu.coreSecretChat}")
-    private  String coreSecretChat;
-    @Value("${feishu.priKey}")
-    private  String priKey;
+
+
 }
 
 
