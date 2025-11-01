@@ -82,12 +82,14 @@ spring:
           max-request-size: 100MB
 
 
-# 链路追踪配置
-management:
-  tracing:
-    enabled: true
-    sampling:
-      probability: 1
-    zipkin:
-      tracing:
-        endpoint: http://117.50.197.170:9411/api/v2/spans
+# 日志配置（开发环境详细日志）
+logging:
+  config: classpath:log4j2.xml
+  level:
+    org.springframework.web: debug
+    # 禁用Log4j2包扫描警告
+    org.apache.logging.log4j.status: debug
+    org.apache.logging.log4j.core.config: debug
+    # 禁用Netty DNS解析器警告
+    io.netty.resolver.dns: debug
+    root: info

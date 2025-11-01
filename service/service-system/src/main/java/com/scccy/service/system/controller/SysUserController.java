@@ -2,7 +2,7 @@ package com.scccy.service.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.scccy.common.modules.dto.ResultData;
-import com.scccy.service.system.domain.mp.SysUserMp;
+import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.service.system.dao.mp.SysUserMpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -60,11 +60,22 @@ public class SysUserController {
     }
 
     /**
-     * 根据ID查询
+     * 根据ID查询（路径变量必须是数字）
      */
-    @GetMapping("/{id}" )
+    @GetMapping("/id/{id}" )
     public ResultData<SysUserMp> getById(@PathVariable Long id) {
         SysUserMp entity = sysUserMpServiceImpl.getById(id);
+        return ResultData.ok(entity);
+    }
+
+
+    /**
+     * 根据user_name查询（支持路径变量，路径必须包含 userName）
+     * 注意：此方法用于支持 /sysUser/userName/xxx 形式的请求
+     */
+    @GetMapping("/userName" )
+    public ResultData<SysUserMp> getByUserName(@RequestParam String userName) {
+        SysUserMp entity = sysUserMpServiceImpl.lambdaQuery().eq(SysUserMp::getUserName, userName).one();
         return ResultData.ok(entity);
     }
 

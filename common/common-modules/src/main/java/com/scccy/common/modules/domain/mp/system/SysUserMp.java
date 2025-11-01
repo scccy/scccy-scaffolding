@@ -1,18 +1,17 @@
-package com.scccy.service.system.domain.mp;
-
-import java.util.Date;
-import java.io.Serializable;
+package com.scccy.common.modules.domain.mp.system;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serial;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 用户信息表(SysUser)实体类

@@ -1,7 +1,7 @@
 package com.scccy.service.system.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.scccy.service.system.domain.mp.SysUserMp;
+import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

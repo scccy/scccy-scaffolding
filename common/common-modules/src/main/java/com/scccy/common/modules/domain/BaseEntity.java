@@ -1,4 +1,4 @@
-package com.scccy.common.modules.entity;
+package com.scccy.common.modules.domain;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

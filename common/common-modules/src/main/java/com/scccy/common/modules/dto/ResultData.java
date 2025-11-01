@@ -1,7 +1,7 @@
 package com.scccy.common.modules.dto;
 
 
-import com.scccy.common.modules.entity.ErrorCode;
+import com.scccy.common.modules.enums.ErrorType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -144,7 +144,7 @@ public class ResultData<T> {
      * @param message 自定义错误消息
      * @return 失败响应结果
      */
-    public static <T> ResultData<T> fail(ErrorCode errorCode, String message) {
+    public static <T> ResultData<T> fail(ErrorType errorCode, String message) {
         return new ResultData<T>()
             .setCode(errorCode.getCode())
             .setMessage(message);

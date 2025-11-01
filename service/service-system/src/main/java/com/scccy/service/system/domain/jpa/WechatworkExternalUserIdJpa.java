@@ -1,7 +1,5 @@
 package com.scccy.service.system.domain.jpa;
 
-import java.util.Date;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotNull;

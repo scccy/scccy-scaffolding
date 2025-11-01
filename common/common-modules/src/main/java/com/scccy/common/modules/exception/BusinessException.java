@@ -1,7 +1,7 @@
 package com.scccy.common.modules.exception;
 
 
-import com.scccy.common.modules.entity.ErrorCode;
+import com.scccy.common.modules.domain.ErrorCode;
 import lombok.Getter;
 
 /**

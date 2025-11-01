@@ -2,7 +2,7 @@ package com.scccy.common.base.exception;
 
 
 import com.scccy.common.modules.dto.ResultData;
-import com.scccy.common.modules.entity.ErrorCode;
+import com.scccy.common.modules.domain.ErrorCode;
 import com.scccy.common.modules.exception.BusinessException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -105,37 +105,7 @@ public class GlobalExceptionHandler {
         return ResultData.fail(ErrorCode.INTERNAL_ERROR, "系统异常，请联系管理员");
     }
 
-    // ========== 新增异常处理方法 ==========
 
-    /**
-     * 处理SQL语法错误异常
-     */
-    @ExceptionHandler(java.sql.SQLSyntaxErrorException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResultData<Object> handleSQLSyntaxErrorException(java.sql.SQLSyntaxErrorException e) {
-        log.error("SQL语法错误: ", e);
-        return ResultData.fail(ErrorCode.DATABASE_QUERY_ERROR, "数据库查询错误");
-    }
-
-    /**
-     * 处理数据完整性违反异常
-     */
-    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResultData<Object> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException e) {
-        log.error("数据完整性违反: ", e);
-        return ResultData.fail(ErrorCode.DATABASE_CONSTRAINT_VIOLATION, "数据完整性错误");
-    }
-
-    /**
-     * 处理重复键异常
-     */
-    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResultData<Object> handleDuplicateKeyException(org.springframework.dao.DuplicateKeyException e) {
-        log.error("重复键异常: ", e);
-        return ResultData.fail(ErrorCode.DATABASE_CONSTRAINT_VIOLATION, "数据重复错误");
-    }
 
     /**
      * 处理HTTP请求方法不支持异常

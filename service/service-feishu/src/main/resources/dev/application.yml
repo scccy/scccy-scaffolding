@@ -13,14 +13,6 @@ feishu:
 # 服务器配置
 server:
   port: 3000
-  # 性能优化配置 - 解决第二次请求超时问题
-  connection-timeout: 10000  # 连接超时时间（毫秒）
-  read-timeout: 15000        # 读取超时时间（毫秒）
-  write-timeout: 15000       # 写入超时时间（毫秒）
-  max-connections: 4096      # 最大连接数
-  threads:
-    max: 100                 # 最大线程数
-    min: 10                  # 最小线程数
   servlet:
     context-path: /
 
@@ -134,14 +126,5 @@ logging:
     # 禁用Netty DNS解析器警告
     io.netty.resolver.dns: DEBUG
     root: info
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/service-gateway.log
-    max-size: 100MB
-    max-history: 30
 
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+

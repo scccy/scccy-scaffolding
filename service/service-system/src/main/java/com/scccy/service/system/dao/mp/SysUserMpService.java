@@ -1,7 +1,7 @@
 package com.scccy.service.system.dao.mp;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.scccy.service.system.domain.mp.SysUserMp;
+import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
