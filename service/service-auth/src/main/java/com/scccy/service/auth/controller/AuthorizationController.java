@@ -2,14 +2,22 @@ package com.scccy.service.auth.controller;
 
 
 import com.github.xingfudeshi.knife4j.core.util.StrUtil;
+import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.domain.ScopeWithDescription;
+import com.scccy.service.auth.dto.LoginBody;
+import com.scccy.service.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
@@ -20,8 +28,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -30,6 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @Tag(name = "OAuth2 授权", description = "OAuth2 授权相关页面接口，包括登录、授权确认、设备验证等")
 public class AuthorizationController {
@@ -40,18 +48,52 @@ public class AuthorizationController {
     @Resource
     private OAuth2AuthorizationConsentService authorizationConsentService;
 
+    @Resource
+    private AuthService authService;
+
     /**
-     * 登陆页面
+     * 用户登录接口（前后端分离）
+     * <p>
+     * 接收 JSON 格式的登录请求，验证用户信息并返回结果
      *
-     * @return 登陆页面
+     * @param loginBody 登录请求体（包含用户名和密码）
+     * @return 登录结果
      */
-    @Operation(summary = "登录页面", description = "跳转到 OAuth2 登录页面")
+    @Operation(
+            summary = "用户登录",
+            description = "前后端分离的登录接口，接收 JSON 格式的用户名和密码，返回登录结果"
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "返回登录页面视图")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "登录成功",
+                    content = @Content(schema = @Schema(implementation = ResultData.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "登录失败，用户名或密码错误",
+                    content = @Content(schema = @Schema(implementation = ResultData.class))
+            )
     })
-    @GetMapping("/login")
-    public String login() {
-        return "login";
+    @PostMapping("/login")
+    @ResponseBody
+    public ResultData<String> login(@Valid @RequestBody LoginBody loginBody) {
+        try {
+            // 调用认证服务进行登录
+            Authentication authentication = authService.authenticate(
+                    loginBody.getUsername(),
+                    loginBody.getPassword()
+            );
+
+            // 登录成功，返回用户名
+            return ResultData.ok("登录成功", authentication.getName());
+        } catch (BadCredentialsException e) {
+            // 登录失败
+            return ResultData.fail("用户名或密码错误");
+        } catch (Exception e) {
+            log.error("登录异常: {}", e.getMessage(), e);
+            return ResultData.fail("登录失败: " + e.getMessage());
+        }
     }
 
     /**

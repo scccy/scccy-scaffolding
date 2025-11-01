@@ -155,6 +155,11 @@ public class ResultData<T> {
                 .setCode(errorCode.getCode())
                 .setMessage(errorCode.getMessage());
     }
+    // ==================== 特殊方法 ====================
+public Boolean isSuccess() {
+
+    return code == 200;
+}
 
 
 }

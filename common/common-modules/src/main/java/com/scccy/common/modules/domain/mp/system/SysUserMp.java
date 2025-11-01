@@ -1,5 +1,6 @@
 package com.scccy.common.modules.domain.mp.system;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -30,9 +31,10 @@ public class SysUserMp extends Model<SysUserMp> implements Serializable {
 
     /**
      * 用户ID
+     * 自动生成雪花ID
      */
-    @Schema(description = "用户ID" )
-    @TableId("user_id" )
+    @Schema(description = "用户ID（自动生成雪花ID）" )
+    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
     private Long userId;
 
     /**

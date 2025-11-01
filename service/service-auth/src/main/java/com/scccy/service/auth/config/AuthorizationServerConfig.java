@@ -106,6 +106,12 @@ public class AuthorizationServerConfig {
                                         .authenticationProvider(deviceClientAuthenticationProvider)
                         ));
 
+        // 允许 /login 接口公开访问（前后端分离，不需要重定向到登录页面）
+        httpSecurity.authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/login").permitAll()
+                .anyRequest().authenticated()
+        );
+
         // 未通过身份验证异常时重定向到登录页面授权端点（通过浏览器访问时）
         httpSecurity.exceptionHandling((exceptions) -> exceptions.defaultAuthenticationEntryPointFor(
                 new LoginUrlAuthenticationEntryPoint(CUSTOM_LOGIN_FORM_URL),
