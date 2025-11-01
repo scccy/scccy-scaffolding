@@ -6,9 +6,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "service-system", path = "/sysUser") //
+@FeignClient(name = "service-system", path = "/sysUser", fallbackFactory = SystemUserClientFallback.class)
 public interface SystemUserClient {
 
-    @GetMapping("/userName" )
+    @GetMapping("/userName")
     ResultData<SysUserMp> getByUserName(@RequestParam String userName);
 }

@@ -3,7 +3,7 @@
 
 # 服务器配置
 server:
-  port: 30001
+  port: 30003
   servlet:
     context-path: /
 
@@ -12,7 +12,7 @@ server:
 spring:
   # 应用名称
   application:
-    name: service-demo
+    name: service-auth
 
 # 配置导入 - 从Nacos加载配置
   config:

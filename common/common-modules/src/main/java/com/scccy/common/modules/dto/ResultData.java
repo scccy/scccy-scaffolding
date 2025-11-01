@@ -150,5 +150,11 @@ public class ResultData<T> {
             .setMessage(message);
     }
 
+    public static <T> ResultData<T> fail(ErrorType errorCode ) {
+        return new ResultData<T>()
+                .setCode(errorCode.getCode())
+                .setMessage(errorCode.getMessage());
+    }
+
 
 }

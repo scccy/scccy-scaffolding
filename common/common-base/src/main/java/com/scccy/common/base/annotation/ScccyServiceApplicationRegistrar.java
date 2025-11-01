@@ -1,4 +1,4 @@
-package com.scccy.common.base.config;
+package com.scccy.common.base.annotation;
 
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.autoconfigure.domain.EntityScanPackages;
@@ -50,6 +50,8 @@ public class ScccyServiceApplicationRegistrar implements ImportBeanDefinitionReg
 
         // 动态注册 JPA Repository 扫描
         registerJpaRepositories(registry, repositoryPackage);
+        
+        // Feign 客户端扫描已通过 @EnableFeignClients 注解自动配置，无需手动注册
     }
 
     /**

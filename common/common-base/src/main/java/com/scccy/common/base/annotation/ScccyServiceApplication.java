@@ -1,10 +1,11 @@
 package com.scccy.common.base.annotation;
 
-import com.scccy.common.base.config.ScccyServiceApplicationRegistrar;
+
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -22,6 +23,7 @@ import java.lang.annotation.*;
  *     <li>@MapperScan</li>
  *     <li>@EnableJpaRepositories</li>
  *     <li>@EntityScan</li>
+ *     <li>@EnableFeignClients</li>
  * </ul>
  * <p>
  * 使用方式：
@@ -61,6 +63,7 @@ import java.lang.annotation.*;
 @EnableConfigurationProperties
 @EnableAsync
 @MapperScan("com.scccy.service.**.dao.mapper")
+@EnableFeignClients(basePackages = "com.scccy.service")
 @Import(ScccyServiceApplicationRegistrar.class)
 public @interface ScccyServiceApplication {
 }
