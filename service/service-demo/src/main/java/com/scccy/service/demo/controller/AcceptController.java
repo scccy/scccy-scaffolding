@@ -27,4 +27,36 @@ public class AcceptController {
 
         return ResponseEntity.ok(user);
     }
+
+//    @PostMapping("/export")
+//    @Operation(summary = "导出excel")
+//    public void export(HttpServletResponse response, SysUser user) throws IOException {
+//        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//        response.setCharacterEncoding("utf-8");
+//        String fileName = URLEncoder.encode("demo", "UTF-8").replaceAll("\\+", "%20");
+//        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+//        List<SysUser> list = SysUerServiceImpl.list();
+//        FastExcel.write(response.getOutputStream(), SysUser.class)
+//                .sheet("Sheet1")
+//                .doWrite(list);
+
+
+
+//    @Operation(summary="上传excel")
+//    @PostMapping("/importData")
+//    public ResultData<?> importData(@RequestParam("file") MultipartFile file) throws Exception {
+////        if (file.isEmpty()) {
+//            return ResultData.fail("请选择一个文件上传！");
+//        }
+//        // 读取 Excel 并处理 SysUser
+//        FastExcel.read(file.getInputStream(), SysUser.class,
+//                        new GenericExcelListener<SysUser>(list -> {
+//                            // 批量保存到数据库
+//                            SysUerServiceImpl.saveBatch(list);
+//                        }))
+//                .sheet()
+//                .doRead();
+//        return ResultData.ok("文件上传并处理成功！");
+//    }
 }
+
