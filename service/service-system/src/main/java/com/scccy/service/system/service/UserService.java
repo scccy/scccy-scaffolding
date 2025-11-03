@@ -5,6 +5,7 @@ import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.system.dao.mp.SysUserMpService;
 import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
+import com.scccy.service.system.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用户服务
@@ -29,9 +32,8 @@ public class UserService {
     @Autowired
     private SysUserMpService sysUserMpService;
 
-    // 注意：JWT工具类需要通过依赖注入，这里暂时注释掉，需要在system模块中也添加JWT相关依赖
-    // @Autowired
-    // private JwtUtils jwtUtils;
+    @Autowired
+    private JwtUtils jwtUtils;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -39,9 +41,9 @@ public class UserService {
      * 用户注册
      *
      * @param registerBody 注册信息
-     * @return 注册结果（注意：这里不返回JWT Token，因为JWT工具类在auth模块）
+     * @return 注册结果（包含JWT Token）
      */
-    public ResultData<SysUserMp> register(RegisterBody registerBody) {
+    public ResultData<LoginResponse> register(RegisterBody registerBody) {
         log.info("用户注册: username={}", registerBody.getUsername());
 
         // 1. 验证用户名是否已存在
@@ -72,8 +74,19 @@ public class UserService {
             return ResultData.fail("注册失败");
         }
 
+        // 4. 生成JWT Token
+        String token = generateUserToken(sysUserMp);
+
+        // 5. 构建登录响应
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setToken(token);
+        loginResponse.setUserId(sysUserMp.getUserId());
+        loginResponse.setUsername(sysUserMp.getUserName());
+        loginResponse.setNickName(sysUserMp.getNickName());
+        loginResponse.setExpireTime(jwtUtils.getExpirationDate(token).getTime());
+
         log.info("用户注册成功: username={}, userId={}", registerBody.getUsername(), sysUserMp.getUserId());
-        return ResultData.ok("注册成功", sysUserMp);
+        return ResultData.ok("注册成功", loginResponse);
     }
 
     /**
@@ -81,10 +94,10 @@ public class UserService {
      *
      * @param username 用户名
      * @param password 密码（明文）
-     * @return 用户信息
+     * @return 登录响应（包含JWT Token和用户信息）
      * @throws BadCredentialsException 认证失败
      */
-    public SysUserMp login(String username, String password) {
+    public LoginResponse login(String username, String password) {
         log.info("用户登录: username={}", username);
 
         // 1. 查询用户信息
@@ -115,8 +128,36 @@ public class UserService {
             throw new BadCredentialsException("用户名或密码错误");
         }
 
+        // 4. 生成JWT Token
+        String token = generateUserToken(user);
+
+        // 5. 构建登录响应
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setToken(token);
+        loginResponse.setUserId(user.getUserId());
+        loginResponse.setUsername(user.getUserName());
+        loginResponse.setNickName(user.getNickName());
+        loginResponse.setExpireTime(jwtUtils.getExpirationDate(token).getTime());
+
         log.info("用户登录成功: username={}, userId={}", username, user.getUserId());
-        return user;
+        return loginResponse;
+    }
+
+    /**
+     * 生成用户JWT Token
+     * 将用户基础信息写入JWT
+     *
+     * @param user 用户信息
+     * @return JWT Token
+     */
+    private String generateUserToken(SysUserMp user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("nickName", user.getNickName());
+        claims.put("status", user.getStatus());
+        claims.put("email", user.getEmail());
+        claims.put("phonenumber", user.getPhonenumber());
+
+        return jwtUtils.generateToken(user.getUserId(), user.getUserName(), claims);
     }
 }
 

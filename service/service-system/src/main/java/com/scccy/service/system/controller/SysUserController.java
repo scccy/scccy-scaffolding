@@ -1,12 +1,17 @@
 package com.scccy.service.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.service.system.dao.mp.SysUserMpService;
 import com.scccy.service.system.dto.LoginBody;
+import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
+import com.scccy.service.system.service.TokenBlacklistService;
 import com.scccy.service.system.service.UserService;
+import com.scccy.service.system.utils.JwtUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,6 +26,7 @@ import java.util.List;
  * @author scccy
  * @date 2025-10-22 16:27:00
  */
+@Slf4j
 @RestController
 @RequestMapping("/sysUser" )
 public class SysUserController {
@@ -31,6 +37,12 @@ public class SysUserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     /**
      * 新增
@@ -45,30 +57,29 @@ public class SysUserController {
      * 用户注册
      * <p>
      * 专门用于用户注册的接口，包含注册相关的验证逻辑
-     * 接收明文密码，自动加密后保存
+     * 接收明文密码，自动加密后保存，并返回JWT Token
      *
      * @param registerBody 注册信息（包含明文密码）
-     * @return 注册结果（包含用户信息）
+     * @return 注册结果（包含JWT Token和用户信息）
      */
     @PostMapping("/register")
-    public ResultData<SysUserMp> register(@Valid @RequestBody RegisterBody registerBody) {
+    public ResultData<LoginResponse> register(@Valid @RequestBody RegisterBody registerBody) {
         return userService.register(registerBody);
     }
 
     /**
      * 用户登录
      * <p>
-     * 验证用户名和密码，返回用户信息
-     * 注意：此接口不生成JWT Token，JWT Token的生成应该在调用方（如auth模块）完成
+     * 验证用户名和密码，返回JWT Token和用户信息
      *
      * @param loginBody 登录信息（用户名和明文密码）
-     * @return 用户信息
+     * @return 登录结果（包含JWT Token和用户信息）
      */
     @PostMapping("/login")
-    public ResultData<SysUserMp> login(@Valid @RequestBody LoginBody loginBody) {
+    public ResultData<LoginResponse> login(@Valid @RequestBody LoginBody loginBody) {
         try {
-            SysUserMp user = userService.login(loginBody.getUsername(), loginBody.getPassword());
-            return ResultData.ok("登录成功", user);
+            LoginResponse loginResponse = userService.login(loginBody.getUsername(), loginBody.getPassword());
+            return ResultData.ok("登录成功", loginResponse);
         } catch (BadCredentialsException e) {
             return ResultData.fail(e.getMessage());
         } catch (Exception e) {
