@@ -1,0 +1,121 @@
+# 认证服务 - Nacos远程配置文件
+# 配置ID: service-auth.yaml
+# 配置组: DEFAULT_GROUP
+# 命名空间: ba1493dc-20fa-413b-84e1-d929c9a4aeac
+
+# 数据源配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:mysql://117.50.197.170:3306/scaffolding?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:XdiwWEW15e}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: HikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  # Redis配置
+  data:
+    redis:
+      host: ${REDIS_HOST:117.50.197.170}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:XdiwWEW15e}
+      database: ${REDIS_DATABASE:0}
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+
+
+# 链路追踪配置
+management:
+  zipkin:
+    tracing:
+      endpoint: http://117.50.197.170:9411/api/v2/spans
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1
+
+
+
+mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+      cache-enabled: false
+      call-setters-on-nulls: true
+      jdbc-type-for-null: 'null'
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+      db-config:
+        id-type: assign_id
+        logic-delete-field: isDeleted
+        logic-delete-value: 1
+        logic-not-delete-value: 0
+    mapper-locations: classpath*:/mapperxml/**/*.xml
+    type-aliases-package: com.scccy.**.entity
+
+
+
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    #operations-sorter: order
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      display-name: '测试'
+      paths-to-match: '/**'
+      packages-to-scan: com.scccy.service
+  default-flat-param-object: true
+
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+#  documents:
+#    - name: 标题1
+#      locations: classpath:markdown/*
+#      group: 测试
+#    - name: 标题2
+#      locations: classpath:markdown1/*
+#      group: 用户模块
+#  basic:
+#    enable: false
+#    username: abc
+#    password: 123
+#  insight:
+#    enable: true
+#    service-name: boot3
+#    secret: S6CsnS8AnPVyb8vvChcdXm4R3p6A6KlAISxBg3IIEgk=
+#    server: http://localhost:10086
+#    namespace: spring3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

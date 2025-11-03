@@ -1,0 +1,191 @@
+# 认证服务 - Nacos远程配置文件
+# 配置ID: service-auth.yaml
+# 配置组: DEFAULT_GROUP
+# 命名空间: ba1493dc-20fa-413b-84e1-d929c9a4aeac
+
+# 数据源配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:mysql://117.50.197.170:3306/scaffolding?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:XdiwWEW15e}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: HikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  # Redis配置
+  data:
+    redis:
+      host: 117.50.197.170
+      port: 6379
+      password: XdiwWEW15e
+      database: 0
+      timeout: 10s
+      connect-timeout: 10s  # 连接超时
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1
+          max-idle: 8
+          min-idle: 0
+        shutdown-timeout: 100ms  # 关闭
+
+# ============== JetCache 缓存配置 ==============
+jetcache:
+  # 统计间隔（分钟）
+  statIntervalMinutes: 10
+  # 隐藏的包名
+  hidePackages: io.github.opensabre
+  
+  # ============== 本地缓存配置 ==============
+  local:
+    # 默认本地缓存 5分钟
+    default:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 300000
+      expireAfterAccessInMillis: 180000
+    
+    # 长时本地缓存 1小时
+    longTime:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 3600000
+      expireAfterAccessInMillis: 1800000
+    
+    # 短时本地缓存 1分钟
+    shortTime:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 60000
+      expireAfterAccessInMillis: 40000
+  
+  # ============== 远程缓存配置（Redis） ==============
+  remote:
+    # 默认远程缓存 2小时
+    default:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 7200000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      # Redis URI 格式：redis://[password@]host:port[/database]
+      # 如果 Redis 有密码，格式为：redis://:password@host:port
+      uri: redis://:XdiwWEW15e@117.50.197.170:6379/0
+    
+    # 长时远程缓存 12小时
+    longTime:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 43200000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      uri: redis://:XdiwWEW15e@117.50.197.170:6379/0
+    
+    # 短时远程缓存 5分钟
+    shortTime:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 300000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      uri: redis://:XdiwWEW15e@117.50.197.170:6379/0
+      
+# 链路追踪配置
+management:
+  zipkin:
+    tracing:
+      endpoint: http://117.50.197.170:9411/api/v2/spans
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1
+
+
+mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+      cache-enabled: false
+      call-setters-on-nulls: true
+      jdbc-type-for-null: 'null'
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+      db-config:
+        id-type: assign_id
+        logic-delete-field: isDeleted
+        logic-delete-value: 1
+        logic-not-delete-value: 0
+    mapper-locations: classpath*:/mapperxml/**/*.xml
+    type-aliases-package: com.scccy.**.entity
+    
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    #operations-sorter: order
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      display-name: 'demo'
+      paths-to-match: '/**'
+  default-flat-param-object: true
+
+
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+#  documents:
+#    - name: 标题1
+#      locations: classpath:markdown/*
+#      group: 测试
+#    - name: 标题2
+#      locations: classpath:markdown1/*
+#      group: 用户模块
+#  basic:
+#    enable: false
+#    username: abc
+#    password: 123
+#  insight:
+#    enable: true
+#    service-name: boot3
+#    secret: S6CsnS8AnPVyb8vvChcdXm4R3p6A6KlAISxBg3IIEgk=
+#    server: http://localhost:10086
+#    namespace: spring3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @Tag(name = "Accept")
-@RequestMapping(value = "/demo",produces = "application/vnd.dim.s.v1+json")
+@RequestMapping(value = "/demo")
 @RestController
 public class AcceptController {
 
-    @Operation(summary = "测试Accept",description = "GitHub:https://github.com/xiaoymin/knife4j/issues/597")
+    @Operation(summary = "测试Accept", description = "GitHub:https://github.com/xiaoymin/knife4j/issues/597")
     @GetMapping("/get")
-    public ResponseEntity<String> get(String user){
+    public ResponseEntity<String> get(String user) {
         log.info("测试哦");
 
         return ResponseEntity.ok(user);
@@ -39,7 +39,7 @@ public class AcceptController {
 //        FastExcel.write(response.getOutputStream(), SysUser.class)
 //                .sheet("Sheet1")
 //                .doWrite(list);
-
+//}
 
 
 //    @Operation(summary="上传excel")

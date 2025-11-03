@@ -1,0 +1,53 @@
+
+# Spring Cloud Gateway配置
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns: "*"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: true
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+      # 路由配置
+          routes:
+            - id: 系统服务
+              uri: lb://service-demo
+              predicates:
+                - Path=/demo/**
+              filters:
+                - StripPrefix=1
+
+
+
+
+knife4j:
+  gateway:
+    enabled: true
+    # 指定服务发现的模式聚合微服务文档，并且是默认`default`分组
+    strategy: discover
+    discover:
+      enabled: true
+      # 指定版本号(Swagger2|OpenAPI3)
+      version : OpenAPI3
+      # 需要排除的微服务(eg:网关服务)
+      excluded-services:
+        - gateway
+
+# 链路追踪配置
+management:
+  zipkin:
+    tracing:
+      endpoint: http://117.50.197.170:9411/api/v2/spans
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1
