@@ -1,21 +1,20 @@
 package com.scccy.service.wechatwork.controller;
 
-import java.util.Date;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.scccy.service.wechatwork.dao.service.WechatworkExternalUserMpService;
-import com.scccy.service.wechatwork.domain.mp.WechatworkExternalUserMp;
-import com.scccy.common.modules.dto.ResultData;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-
-import com.scccy.service.wechatwork.domain.jpa.WechatworkExternalUserJpa;
-import com.scccy.service.wechatwork.domain.jpa.WechatworkExternalUserIdJpa;
+import com.scccy.common.excel.untils.ExcelUtil;
+import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.wechatwork.dao.repository.WechatworkExternalUserRepository;
+import com.scccy.service.wechatwork.dao.service.WechatworkExternalUserMpService;
+import com.scccy.service.wechatwork.domain.jpa.WechatworkExternalUserIdJpa;
+import com.scccy.service.wechatwork.domain.jpa.WechatworkExternalUserJpa;
+import com.scccy.service.wechatwork.domain.mp.WechatworkExternalUserMp;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * 好友关系 控制器（联合主键，使用 JPA Repository 进行部分 CRUD；分页/列表使用 MyBatis-Plus）
@@ -170,6 +169,15 @@ public class WechatworkExternalUserController {
     public ResultData<List<WechatworkExternalUserMp>> all() {
         List<WechatworkExternalUserMp> list = wechatworkExternalUserMpServiceImpl.list();
         return ResultData.ok(list);
+    }
+
+    @GetMapping("/export")
+    public void exportUsers(HttpServletResponse response) throws IOException {
+        // 获取数据
+        List<WechatworkExternalUserMp> users = wechatworkExternalUserMpServiceImpl.list();
+
+        // 导出 Excel
+        ExcelUtil.export(response, "用户列表", users, WechatworkExternalUserMp.class);
     }
 }
 

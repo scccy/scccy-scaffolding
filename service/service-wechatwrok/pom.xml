@@ -25,7 +25,11 @@
             <artifactId>common-wechatwork</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.scccy</groupId>
+            <artifactId>common-excel</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
 
         <dependency>

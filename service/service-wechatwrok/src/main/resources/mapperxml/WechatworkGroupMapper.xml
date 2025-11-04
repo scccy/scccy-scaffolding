@@ -2,8 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.scccy.service.wechatwork.mapper.WechatworkGroupMapper">
-    <resultMap id="BaseResultMap" type="com.scccy.service.wechatwork.domain.WechatworkGroupMp">
+<mapper namespace="com.scccy.service.wechatwork.dao.mapper.WechatworkGroupMapper">
+    <resultMap id="BaseResultMap" type="com.scccy.service.wechatwork.domain.mp.WechatworkGroupMp">
         <!--@mbg.generated-->
         <!--@Table wechatwork_group-->
         <result column="wechatwork_user_id" jdbcType="VARCHAR" property="wechatworkUserId"/>

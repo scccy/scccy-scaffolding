@@ -25,6 +25,7 @@ import java.util.Date;
 @Accessors(chain = true)
 @TableName("sys_user" )
 @Schema(name = "SysUserMp" , description = "用户信息表" )
+
 public class SysUserMp extends Model<SysUserMp> implements Serializable {
     @Serial
     private static final long serialVersionUID = -27821874157644536L;

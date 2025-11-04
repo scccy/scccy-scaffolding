@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.scccy.common.excel.annotation.ExcelSchemaProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,6 +25,7 @@ import java.util.Date;
 @Accessors(chain = true)
 @TableName("wechatwork_external_user")
 @Schema(name = "WechatworkExternalUserMp", description = "好友关系")
+@ExcelSchemaProperty
 public class WechatworkExternalUserMp extends Model<WechatworkExternalUserMp> implements Serializable {
     @Serial
     private static final long serialVersionUID = -14683513622400071L;
