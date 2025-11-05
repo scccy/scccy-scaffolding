@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.support.config.FastJsonConfig;
 import com.alibaba.fastjson2.support.spring6.http.converter.FastJsonHttpMessageConverter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -22,14 +21,22 @@ import java.util.Collections;
 import java.util.List;
 
 /**
-
+ * Web MVC配置类
  * 只包含通用的WebMvc配置，不包含业务相关的拦截器
  * 排除Gateway服务，因为Gateway使用WebFlux
+ * 
+ * @author origin
+ * @since 2024-12-19
  */
 @Configuration
-@RequiredArgsConstructor
 @ConditionalOnClass(WebMvcConfigurer.class)
 public class WebMvcConfig implements WebMvcConfigurer {
+    
+    /**
+     * 默认构造函数
+     */
+    public WebMvcConfig() {
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

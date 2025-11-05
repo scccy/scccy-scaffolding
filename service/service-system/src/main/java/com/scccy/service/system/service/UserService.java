@@ -2,10 +2,10 @@ package com.scccy.service.system.service;
 
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
+import com.scccy.service.system.dao.mapper.SysUserMapper;
 import com.scccy.service.system.dao.mp.SysUserMpService;
 import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
-import com.scccy.service.system.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,9 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 用户服务
@@ -33,15 +33,19 @@ public class UserService {
     private SysUserMpService sysUserMpService;
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private SysUserMapper sysUserMapper;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     /**
      * 用户注册
+     * <p>
+     * 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+     * 此接口只负责用户注册，不返回 Token
+     * 客户端需要单独调用 Authorization Server 获取 Token
      *
      * @param registerBody 注册信息
-     * @return 注册结果（包含JWT Token）
+     * @return 注册结果（包含用户信息，不包含 Token）
      */
     public ResultData<LoginResponse> register(RegisterBody registerBody) {
         log.info("用户注册: username={}", registerBody.getUsername());
@@ -74,16 +78,15 @@ public class UserService {
             return ResultData.fail("注册失败");
         }
 
-        // 4. 生成JWT Token
-        String token = generateUserToken(sysUserMp);
-
-        // 5. 构建登录响应
+        // 4. 构建登录响应（不包含 Token）
+        // 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+        // 客户端需要单独调用 Authorization Server 获取 Token
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(token);
+        loginResponse.setToken(null);  // 不再返回 Token
         loginResponse.setUserId(sysUserMp.getUserId());
         loginResponse.setUsername(sysUserMp.getUserName());
         loginResponse.setNickName(sysUserMp.getNickName());
-        loginResponse.setExpireTime(jwtUtils.getExpirationDate(token).getTime());
+        loginResponse.setExpireTime(null);  // 不再返回过期时间
 
         log.info("用户注册成功: username={}, userId={}", registerBody.getUsername(), sysUserMp.getUserId());
         return ResultData.ok("注册成功", loginResponse);
@@ -91,10 +94,14 @@ public class UserService {
 
     /**
      * 用户登录
+     * <p>
+     * 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+     * 此接口只负责验证用户身份，不返回 Token
+     * 客户端需要单独调用 Authorization Server 获取 Token
      *
      * @param username 用户名
      * @param password 密码（明文）
-     * @return 登录响应（包含JWT Token和用户信息）
+     * @return 登录响应（包含用户信息，不包含 Token）
      * @throws BadCredentialsException 认证失败
      */
     public LoginResponse login(String username, String password) {
@@ -128,36 +135,42 @@ public class UserService {
             throw new BadCredentialsException("用户名或密码错误");
         }
 
-        // 4. 生成JWT Token
-        String token = generateUserToken(user);
-
-        // 5. 构建登录响应
+        // 4. 构建登录响应（不包含 Token）
+        // 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+        // 客户端需要单独调用 Authorization Server 获取 Token
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(token);
+        loginResponse.setToken(null);  // 不再返回 Token
         loginResponse.setUserId(user.getUserId());
         loginResponse.setUsername(user.getUserName());
         loginResponse.setNickName(user.getNickName());
-        loginResponse.setExpireTime(jwtUtils.getExpirationDate(token).getTime());
+        loginResponse.setExpireTime(null);  // 不再返回过期时间
 
         log.info("用户登录成功: username={}, userId={}", username, user.getUserId());
         return loginResponse;
     }
 
     /**
-     * 生成用户JWT Token
-     * 将用户基础信息写入JWT
+     * 获取用户权限列表
+     * <p>
+     * 查询用户 → 角色 → 菜单权限的完整链路
+     * 返回权限列表，包含：
+     * - 角色标识：ROLE_ADMIN, ROLE_USER（Spring Security 标准格式）
+     * - 菜单权限：system:user:list, system:user:add（菜单 perms 字段）
      *
-     * @param user 用户信息
-     * @return JWT Token
+     * @param userName 用户名
+     * @return 权限列表
      */
-    private String generateUserToken(SysUserMp user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("nickName", user.getNickName());
-        claims.put("status", user.getStatus());
-        claims.put("email", user.getEmail());
-        claims.put("phonenumber", user.getPhonenumber());
-
-        return jwtUtils.generateToken(user.getUserId(), user.getUserName(), claims);
+    public List<String> getUserAuthorities(String userName) {
+        log.debug("获取用户权限: userName={}", userName);
+        try {
+            List<String> authorities = sysUserMapper.getUserAuthorities(userName);
+            log.debug("用户权限查询成功: userName={}, authorities={}", userName, authorities);
+            return authorities != null ? authorities : Collections.emptyList();
+        } catch (Exception e) {
+            log.error("获取用户权限失败: userName={}, error={}", userName, e.getMessage(), e);
+            return Collections.emptyList();
+        }
     }
+
 }
 
