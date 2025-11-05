@@ -16,9 +16,19 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 @Configuration
 public class RedisConfig {
+    
+    /**
+     * 默认构造函数
+     */
+    public RedisConfig() {
+    }
 
     /**
      * 配置RedisTemplate
+     * 使用FastJSON2序列化value，String序列化key
+     * 
+     * @param connectionFactory Redis连接工厂
+     * @return RedisTemplate 配置好的RedisTemplate实例
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {

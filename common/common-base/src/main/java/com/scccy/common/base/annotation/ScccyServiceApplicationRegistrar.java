@@ -22,6 +22,12 @@ import org.springframework.core.type.AnnotationMetadata;
  * @author scccy
  */
 public class ScccyServiceApplicationRegistrar implements ImportBeanDefinitionRegistrar {
+    
+    /**
+     * 默认构造函数
+     */
+    public ScccyServiceApplicationRegistrar() {
+    }
 
     private static final String BASE_PACKAGE = "com.scccy.service";
 
