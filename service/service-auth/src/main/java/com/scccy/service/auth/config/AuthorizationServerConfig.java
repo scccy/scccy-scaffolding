@@ -76,6 +76,8 @@ public class AuthorizationServerConfig {
 
 
         httpSecurity
+                // 使用 securityMatcher 只匹配 OAuth2 相关端点，避免与其他过滤器链冲突
+                .securityMatcher("/oauth2/**", "/login", "/.well-known/**")
                 .with(authorizationServerConfigurer, configurer -> configurer
                         // 设置客户端授权中失败的handler处理
                         .clientAuthentication((auth) -> auth.errorResponseHandler(errorResponseHandler))
@@ -106,9 +108,9 @@ public class AuthorizationServerConfig {
                                         .authenticationProvider(deviceClientAuthenticationProvider)
                         ));
 
-        // 允许 /login 接口公开访问（前后端分离，不需要重定向到登录页面）
+        // 允许公开访问的端点
         httpSecurity.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login").permitAll()
+                .requestMatchers("/login", "/oauth2/**", "/.well-known/**", "/actuator/**", "/doc.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
         );
 
@@ -124,15 +126,5 @@ public class AuthorizationServerConfig {
                         .accessDeniedHandler(new Oauth2AccessDeniedHandler())
         );
         return httpSecurity.build();
-    }
-
-    /**
-     * AuthorizationServerSettings配置 Spring Authorization Server的实例
-     *
-     * @return AuthorizationServerSettings
-     */
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
     }
 }

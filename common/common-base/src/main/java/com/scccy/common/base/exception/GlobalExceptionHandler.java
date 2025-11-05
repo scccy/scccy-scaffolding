@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -21,16 +22,24 @@ import java.util.stream.Collectors;
 /**
  * 全局异常处理器
  * 排除Gateway服务，因为Gateway使用WebFlux异常处理
- *
+ * <p>
  * 职责范围：
  * 1. 处理通用基础异常（参数校验、运行时异常等）
  * 2. 为各微服务模块提供兜底异常处理
- * 3. 各微服务模块应该有自己的业务异常处理器
+ * 3. 各微服务模块应该有自己的业务异常处理器（使用 @Order 设置更高优先级）
+ * <p>
+ * 优先级说明：
+ * - 业务异常处理器：@Order(100) 或更高，优先处理特定业务异常
+ * - 全局异常处理器：@Order(Ordered.LOWEST_PRECEDENCE) 或默认，作为兜底处理
+ * <p>
+ * 注意：Spring 中 @RestControllerAdvice 类不能通过继承共享异常处理方法，
+ * 各异常处理器需要独立定义，通过 @Order 控制处理优先级。
  *
  * @author origin
  * @since 2025-07-31
  */
 @Slf4j
+@Order(org.springframework.core.Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 @ConditionalOnMissingClass("com.origin.gateway.GatewayApplication")
 public class GlobalExceptionHandler {

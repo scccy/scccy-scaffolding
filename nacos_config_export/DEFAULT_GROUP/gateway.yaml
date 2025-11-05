@@ -1,6 +1,15 @@
 
 # Spring Cloud Gateway配置
 spring:
+  # OAuth2 Resource Server 配置
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://service-auth:30003  # Authorization Server 地址（使用服务名，适用于微服务环境）
+          # 或显式配置 JWK Set URI
+          # jwk-set-uri: http://service-auth:30003/oauth2/jwks
+
   cloud:
     gateway:
       server:
@@ -25,6 +34,15 @@ spring:
                 - Path=/demo/**
               filters:
                 - StripPrefix=1
+                - name: UserInfoGatewayFilter  # 应用用户信息过滤器
+            # 示例：其他服务路由也可以应用用户信息过滤器
+            # - id: service-system
+            #   uri: lb://service-system
+            #   predicates:
+            #     - Path=/system/**
+            #   filters:
+            #     - StripPrefix=1
+            #     - name: UserInfoGatewayFilter
 
 
 
