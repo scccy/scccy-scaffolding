@@ -1,7 +1,6 @@
 package com.scccy.service.system.dao.mp;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.scccy.service.system.domain.mp.WechatworkExternalUserMp;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**

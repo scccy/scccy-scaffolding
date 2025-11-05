@@ -2,7 +2,6 @@ package com.scccy.service.system.dao.mp.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.scccy.service.system.dao.mapper.WechatworkExternalUserMapper;
-import com.scccy.service.system.domain.mp.WechatworkExternalUserMp;
 import com.scccy.service.system.dao.mp.WechatworkExternalUserMpService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

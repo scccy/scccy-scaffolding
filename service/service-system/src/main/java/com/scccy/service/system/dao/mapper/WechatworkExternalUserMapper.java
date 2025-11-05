@@ -1,7 +1,6 @@
 package com.scccy.service.system.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.scccy.service.system.domain.mp.WechatworkExternalUserMp;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
