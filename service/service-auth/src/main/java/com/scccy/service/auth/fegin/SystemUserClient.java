@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @FeignClient(name = "service-system", path = "/sysUser", fallbackFactory = SystemUserClientFallback.class)
 public interface SystemUserClient {
 
@@ -33,4 +35,18 @@ public interface SystemUserClient {
      */
     @PostMapping("/login")
     ResultData<SysUserMp> login(@RequestBody LoginBody loginBody);
+
+    /**
+     * 获取用户权限列表
+     * <p>
+     * 查询用户 → 角色 → 菜单权限的完整链路
+     * 返回权限列表，包含：
+     * - 角色标识：ROLE_ADMIN, ROLE_USER（Spring Security 标准格式）
+     * - 菜单权限：system:user:list, system:user:add（菜单 perms 字段）
+     *
+     * @param userName 用户名
+     * @return 权限列表
+     */
+    @GetMapping("/authorities")
+    ResultData<List<String>> getUserAuthorities(@RequestParam String userName);
 }

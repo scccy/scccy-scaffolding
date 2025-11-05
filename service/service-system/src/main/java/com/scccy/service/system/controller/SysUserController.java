@@ -8,9 +8,7 @@ import com.scccy.service.system.dao.mp.SysUserMpService;
 import com.scccy.service.system.dto.LoginBody;
 import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
-import com.scccy.service.system.service.TokenBlacklistService;
 import com.scccy.service.system.service.UserService;
-import com.scccy.service.system.utils.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +36,6 @@ public class SysUserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
-
     /**
      * 新增
      */
@@ -57,10 +49,13 @@ public class SysUserController {
      * 用户注册
      * <p>
      * 专门用于用户注册的接口，包含注册相关的验证逻辑
-     * 接收明文密码，自动加密后保存，并返回JWT Token
+     * 接收明文密码，自动加密后保存
+     * <p>
+     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+     * 此接口不返回 Token，客户端需要单独调用 Authorization Server 获取 Token
      *
      * @param registerBody 注册信息（包含明文密码）
-     * @return 注册结果（包含JWT Token和用户信息）
+     * @return 注册结果（包含用户信息，不包含 Token）
      */
     @PostMapping("/register")
     public ResultData<LoginResponse> register(@Valid @RequestBody RegisterBody registerBody) {
@@ -70,10 +65,13 @@ public class SysUserController {
     /**
      * 用户登录
      * <p>
-     * 验证用户名和密码，返回JWT Token和用户信息
+     * 验证用户名和密码，返回用户信息
+     * <p>
+     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+     * 此接口不返回 Token，客户端需要单独调用 Authorization Server 获取 Token
      *
      * @param loginBody 登录信息（用户名和明文密码）
-     * @return 登录结果（包含JWT Token和用户信息）
+     * @return 登录结果（包含用户信息，不包含 Token）
      */
     @PostMapping("/login")
     public ResultData<LoginResponse> login(@Valid @RequestBody LoginBody loginBody) {
@@ -168,6 +166,23 @@ public class SysUserController {
     public ResultData<List<SysUserMp>> all() {
         List<SysUserMp> list = sysUserMpServiceImpl.list();
         return ResultData.ok(list);
+    }
+
+    /**
+     * 获取用户权限列表
+     * <p>
+     * 查询用户 → 角色 → 菜单权限的完整链路
+     * 返回权限列表，包含：
+     * - 角色标识：ROLE_ADMIN, ROLE_USER（Spring Security 标准格式）
+     * - 菜单权限：system:user:list, system:user:add（菜单 perms 字段）
+     *
+     * @param userName 用户名
+     * @return 权限列表
+     */
+    @GetMapping("/authorities")
+    public ResultData<List<String>> getUserAuthorities(@RequestParam String userName) {
+        List<String> authorities = userService.getUserAuthorities(userName);
+        return ResultData.ok(authorities);
     }
 }
 
