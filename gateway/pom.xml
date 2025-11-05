@@ -35,8 +35,25 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <!-- Common Modules - 提供 JwtUtils 等工具类 -->
+        <dependency>
+            <groupId>com.scccy</groupId>
+            <artifactId>common-modules</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <!-- 排除 MyBatis Plus，Gateway 不需要数据库相关依赖 -->
+                <exclusion>
+                    <groupId>com.baomidou</groupId>
+                    <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-
+        <!-- Spring Security OAuth2 Resource Server - 用于验证 Token -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
 
         <!-- Knife4j OpenAPI3 Jakarta Spring Boot Starter -->
         <dependency>

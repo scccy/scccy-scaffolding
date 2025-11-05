@@ -63,6 +63,11 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Spring Security OAuth2 JWT - 用于 JwtUtils 工具类 -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+        </dependency>
 
     </dependencies>
 
