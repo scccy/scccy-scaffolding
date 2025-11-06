@@ -1,6 +1,9 @@
 package com.scccy.service.auth.config;
 
+import com.alibaba.fastjson2.JSON;
+import com.scccy.common.modules.constant.SecurityPathConstants;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
+import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.fegin.SystemUserClient;
 import com.scccy.service.auth.oauth2.device.DeviceClientAuthenticationConverter;
 import com.scccy.service.auth.oauth2.device.DeviceClientAuthenticationProvider;
@@ -24,18 +27,20 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 @Slf4j
 @Configuration
 public class AuthorizationServerConfig {
 
-    private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
-    private static final String CUSTOM_VERIFICATION_URI = "/oauth2/activate";
-    private static final String CUSTOM_LOGIN_FORM_URL = "/login";
+    // 注意：前后端分离架构，不再使用 HTML 页面
+    // OAuth2 授权流程应由前端处理，后端只提供 API 接口
+    // 如果需要授权确认页面，应该由前端实现，后端只提供授权数据 API
 
     @Resource
     private SystemUserClient userService;
@@ -76,8 +81,9 @@ public class AuthorizationServerConfig {
 
 
         httpSecurity
-                // 使用 securityMatcher 只匹配 OAuth2 相关端点，避免与其他过滤器链冲突
-                .securityMatcher("/oauth2/**", "/login", "/.well-known/**")
+                // 使用 securityMatcher 匹配所有需要处理的端点（统一使用 SecurityPathConstants 管理）
+                // 包括 OAuth2 端点、登录端点、文档端点等，避免与其他过滤器链冲突
+                .securityMatcher(SecurityPathConstants.AUTHORIZATION_SERVER_PUBLIC_ENDPOINTS)
                 .with(authorizationServerConfigurer, configurer -> configurer
                         // 设置客户端授权中失败的handler处理
                         .clientAuthentication((auth) -> auth.errorResponseHandler(errorResponseHandler))
@@ -92,15 +98,9 @@ public class AuthorizationServerConfig {
                                     }
                             );
                         })
-                        // 设置自定义用户确认授权页
-                        .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage(CUSTOM_CONSENT_PAGE_URI))
-                        // 设置设备码用户验证url(自定义用户验证页)
-                        .deviceAuthorizationEndpoint(deviceAuthorizationEndpoint -> deviceAuthorizationEndpoint.verificationUri(CUSTOM_VERIFICATION_URI))
-                        // 设置验证设备码用户确认授权页
-                        .deviceVerificationEndpoint(deviceVerificationEndpoint -> {
-                            deviceVerificationEndpoint.consentPage(CUSTOM_CONSENT_PAGE_URI);
-                            deviceVerificationEndpoint.deviceVerificationResponseHandler(new Oauth2DeviceSuccessHandler());
-                        })
+                        // 前后端分离架构：不再设置 HTML 页面
+                        // 授权确认和设备验证应由前端处理，后端只提供 API 接口
+                        // 如果需要自定义授权流程，可以通过前端调用后端 API 实现
                         // 客户端认证添加设备码的converter和provider
                         .clientAuthentication(clientAuthentication ->
                                 clientAuthentication
@@ -110,15 +110,25 @@ public class AuthorizationServerConfig {
 
         // 允许公开访问的端点
         httpSecurity.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/login", "/oauth2/**", "/.well-known/**", "/actuator/**", "/doc.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers(SecurityPathConstants.AUTHORIZATION_SERVER_PUBLIC_ENDPOINTS).permitAll()
                 .anyRequest().authenticated()
         );
 
-        // 未通过身份验证异常时重定向到登录页面授权端点（通过浏览器访问时）
-        httpSecurity.exceptionHandling((exceptions) -> exceptions.defaultAuthenticationEntryPointFor(
-                new LoginUrlAuthenticationEntryPoint(CUSTOM_LOGIN_FORM_URL),
-                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-        ));
+        // 前后端分离架构：未通过身份验证时返回 401 JSON，而不是重定向到登录页面或返回 HTML
+        httpSecurity.exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    log.debug("未认证访问: {}", request.getRequestURI());
+                    
+                    // 使用 ResultData 统一错误响应格式
+                    ResultData<Object> result = ResultData.fail(HttpStatus.UNAUTHORIZED.value(), "需要有效的访问令牌");
+                    String jsonResponse = JSON.toJSONString(result);
+                    
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(jsonResponse);
+                })
+        );
         // 处理使用access token访问用户信息端点和客户端注册端点
         httpSecurity.oauth2ResourceServer(resourceServer ->
                 resourceServer
