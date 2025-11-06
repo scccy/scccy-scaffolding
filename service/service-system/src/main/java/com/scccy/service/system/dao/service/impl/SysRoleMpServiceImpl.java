@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
  * 角色信息表(SysRole)服务实现类
  *
  * @author scccy
- * @since 2025-11-05 17:55:12
+ * @since 2025-11-06 15:49:52
  */
 @Service
 public class SysRoleMpServiceImpl
@@ -102,7 +102,7 @@ public class SysRoleMpServiceImpl
         if (sysRoleMp.getDelFlag() != null && !sysRoleMp.getDelFlag().isEmpty()) {
             wrapper.like("del_flag", sysRoleMp.getDelFlag());
         }
-        if (sysRoleMp.getCreateBy() != null && !sysRoleMp.getCreateBy().isEmpty()) {
+        if (sysRoleMp.getCreateBy() != null ) {
             wrapper.like("create_by", sysRoleMp.getCreateBy());
         }
         if (sysRoleMp.getCreateTime() != null) {

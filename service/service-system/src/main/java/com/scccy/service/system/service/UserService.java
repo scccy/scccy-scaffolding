@@ -3,7 +3,7 @@ package com.scccy.service.system.service;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.system.dao.mapper.SysUserMapper;
-import com.scccy.service.system.dao.mp.SysUserMpService;
+import com.scccy.service.system.dao.service.SysUserMpService;
 import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
 import lombok.extern.slf4j.Slf4j;

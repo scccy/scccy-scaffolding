@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
  * 角色信息表(SysRole)表服务接口
  *
  * @author scccy
- * @since 2025-11-05 17:55:12
+ * @since 2025-11-06 15:49:52
  */
 public interface SysRoleMpService extends IService<SysRoleMp> {
 

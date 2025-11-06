@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 角色信息表(SysRole)Mapper 接口
  *
  * @author scccy
- * @since 2025-11-05 17:55:12
+ * @since 2025-11-06 15:49:52
  */
 @Mapper
 public interface SysRoleMapper extends BaseMapper<SysRoleMp> {

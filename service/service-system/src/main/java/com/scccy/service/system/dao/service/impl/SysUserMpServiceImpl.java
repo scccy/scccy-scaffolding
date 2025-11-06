@@ -1,9 +1,9 @@
-package com.scccy.service.system.dao.mp.impl;
+package com.scccy.service.system.dao.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.scccy.service.system.dao.mapper.SysUserMapper;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
-import com.scccy.service.system.dao.mp.SysUserMpService;
+import com.scccy.service.system.dao.service.SysUserMpService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;

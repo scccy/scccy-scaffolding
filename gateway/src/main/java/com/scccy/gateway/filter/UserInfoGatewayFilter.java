@@ -1,5 +1,6 @@
 package com.scccy.gateway.filter;
 
+import com.scccy.common.modules.constant.UserHeaderConstants;
 import com.scccy.common.modules.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -50,11 +51,11 @@ public class UserInfoGatewayFilter extends AbstractGatewayFilterFactory<Object> 
                     log.debug("提取用户信息: userId={}, username={}, authorities={}",
                         userId, username, authorities);
 
-                    // 添加用户信息到请求头
+                    // 添加用户信息到请求头（这些请求头不会暴露给前端，只在 Gateway 和后端服务之间传递）
                     ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                        .header("X-User-Id", userId != null ? String.valueOf(userId) : "")
-                        .header("X-Username", username != null ? username : "")
-                        .header("X-Authorities", authorities != null && !authorities.isEmpty()
+                        .header(UserHeaderConstants.HEADER_USER_ID, userId != null ? String.valueOf(userId) : "")
+                        .header(UserHeaderConstants.HEADER_USERNAME, username != null ? username : "")
+                        .header(UserHeaderConstants.HEADER_AUTHORITIES, authorities != null && !authorities.isEmpty()
                             ? String.join(",", authorities) : "")
                         .build();
 

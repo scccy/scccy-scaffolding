@@ -1,4 +1,4 @@
-package com.scccy.service.system.dao.mp;
+package com.scccy.service.system.dao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;

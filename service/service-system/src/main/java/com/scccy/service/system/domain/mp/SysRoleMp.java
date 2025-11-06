@@ -6,7 +6,6 @@ import java.io.Serializable;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.scccy.common.modules.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -19,16 +18,16 @@ import java.io.Serial;
  * 角色信息表(SysRole)实体类
  *
  * @author scccy
- * @since 2025-11-05 17:50:53
+ * @since 2025-11-06 15:49:52
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("sys_role")
 @Schema(name = "SysRoleMp", description = "角色信息表")
-public class SysRoleMp extends BaseEntity implements Serializable {
+public class SysRoleMp extends Model<SysRoleMp> implements Serializable {
     @Serial
-    private static final long serialVersionUID = 854536446193508947L;
+    private static final long serialVersionUID = 170147702554898217L;
 
     /**
      * 角色ID
@@ -85,6 +84,41 @@ public class SysRoleMp extends BaseEntity implements Serializable {
     @Schema(description = "角色状态（0正常 1停用）")
     @TableField("status")
     private String status;
+
+    /**
+     * 删除标志（0代表存在 2代表删除）
+     */
+    @Schema(description = "删除标志（0代表存在 2代表删除）")
+    @TableField("del_flag")
+    private String delFlag;
+
+    /**
+     * 创建者
+     */
+    @Schema(description = "创建者")
+    @TableField("create_by")
+    private String createBy;
+
+    /**
+     * 创建时间
+     */
+    @Schema(description = "创建时间")
+    @TableField("create_time")
+    private Date createTime;
+
+    /**
+     * 更新者
+     */
+    @Schema(description = "更新者")
+    @TableField("update_by")
+    private String updateBy;
+
+    /**
+     * 更新时间
+     */
+    @Schema(description = "更新时间")
+    @TableField("update_time")
+    private Date updateTime;
 
     /**
      * 备注

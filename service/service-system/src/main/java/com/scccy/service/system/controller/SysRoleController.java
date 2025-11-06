@@ -19,7 +19,7 @@ import com.scccy.service.system.domain.mp.SysRoleMp;
  * 角色信息表 控制器（单主键，使用 MyBatis-Plus Service 完整 CRUD）
  *
  * @author scccy
- * @date 2025-11-05 17:55:12
+ * @date 2025-11-06 15:49:53
  */
 @RestController
 @RequestMapping("/sysRole")
