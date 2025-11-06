@@ -28,7 +28,7 @@ import java.util.List;
  */
 @Configuration
 public class OpenFeignConfig {
-    
+
     /**
      * 默认构造函数
      */

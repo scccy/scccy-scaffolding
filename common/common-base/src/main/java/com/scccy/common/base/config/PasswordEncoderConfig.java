@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 @Configuration
 public class PasswordEncoderConfig {
-    
+
     /**
      * 默认构造函数
      */

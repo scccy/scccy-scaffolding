@@ -116,9 +116,13 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
         </dependency>
+
+        <!-- Spring Security OAuth2 Resource Server - 提供 Resource Server 支持 -->
+        <!-- 该依赖包含 Spring Security 基础 + OAuth2 Resource Server -->
+        <!-- 所有使用 @ScccyServiceApplication 的服务自动获得 Resource Server 能力 -->
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-config</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
 

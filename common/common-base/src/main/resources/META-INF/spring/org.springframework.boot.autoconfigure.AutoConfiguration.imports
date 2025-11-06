@@ -6,5 +6,7 @@ com.scccy.common.base.config.OpenFeignConfig
 com.scccy.common.base.config.RedisConfig
 com.scccy.common.base.config.OkHttpConfig
 com.scccy.common.base.config.PasswordEncoderConfig
+com.scccy.common.base.config.PermitAllUrlProperties
+com.scccy.common.base.config.ResourceServerConfig
 com.scccy.common.base.exception.GlobalExceptionHandler
 com.scccy.common.base.manager.OkHttpManager
