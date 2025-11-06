@@ -44,7 +44,7 @@ public class RegisteredClientConvert {
         String grantTypesStr = registeredClientPo.getAuthorizationGrantTypes();
         Set<AuthorizationGrantType> grantTypes = (grantTypesStr != null && !grantTypesStr.trim().isEmpty())
                 ? Arrays.stream(StringUtils.split(grantTypesStr, ","))
-                        .map(AuthorizationGrantType::new)
+                .map(AuthorizationGrantType::new)
                         .collect(Collectors.toSet())
                 : Set.of(new AuthorizationGrantType("client_credentials"));  // 默认值
         
@@ -56,7 +56,7 @@ public class RegisteredClientConvert {
         if (redirectUrisStr != null && !redirectUrisStr.trim().isEmpty()) {
             redirectUrisTemp = Arrays.stream(StringUtils.split(redirectUrisStr, ","))
                     .filter(uri -> uri != null && !uri.trim().isEmpty())
-                    .collect(Collectors.toSet());
+                .collect(Collectors.toSet());
         } else {
             redirectUrisTemp = Set.of();  // 先设为空集合
         }
@@ -84,7 +84,7 @@ public class RegisteredClientConvert {
         String methodsStr = registeredClientPo.getClientAuthenticationMethods();
         Set<ClientAuthenticationMethod> methods = (methodsStr != null && !methodsStr.trim().isEmpty())
                 ? Arrays.stream(StringUtils.split(methodsStr, ","))
-                        .map(ClientAuthenticationMethod::new)
+                .map(ClientAuthenticationMethod::new)
                         .collect(Collectors.toSet())
                 : Set.of(new ClientAuthenticationMethod("client_secret_basic"));  // 默认值
         // 构建 RegisteredClient对象

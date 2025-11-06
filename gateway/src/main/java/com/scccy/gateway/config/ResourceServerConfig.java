@@ -1,12 +1,15 @@
 package com.scccy.gateway.config;
 
+import com.scccy.common.modules.constant.SecurityPathConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 
 /**
  * Gateway Resource Server 配置
@@ -31,18 +34,15 @@ public class ResourceServerConfig {
         http
             .authorizeExchange(exchanges -> exchanges
                 // 公开端点：OAuth2 相关、登录、健康检查、API 文档等
-                .pathMatchers(
-                    "/oauth2/**",
-                    "/login",
-                    "/actuator/**",
-                    "/doc.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-resources/**",
-                    "/webjars/**"
-                ).permitAll()
+                .pathMatchers(SecurityPathConstants.PUBLIC_ENDPOINTS).permitAll()
+                // 支持 @Anonymous 注解的路径约定（与业务服务保持一致）
+                .pathMatchers(SecurityPathConstants.ANONYMOUS_PATHS).permitAll()
                 // 其他路径需要认证
                 .anyExchange().authenticated()
+            )
+            // 前后端分离架构：未通过身份验证时返回 401 JSON，而不是重定向到登录页面
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(new JsonServerAuthenticationEntryPoint())
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
