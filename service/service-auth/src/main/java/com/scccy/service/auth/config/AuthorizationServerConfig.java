@@ -8,7 +8,7 @@ import com.scccy.service.auth.fegin.SystemUserClient;
 import com.scccy.service.auth.oauth2.device.DeviceClientAuthenticationConverter;
 import com.scccy.service.auth.oauth2.device.DeviceClientAuthenticationProvider;
 import com.scccy.service.auth.oauth2.handler.Oauth2AccessDeniedHandler;
-import com.scccy.service.auth.oauth2.handler.Oauth2DeviceSuccessHandler;
+
 import com.scccy.service.auth.oauth2.handler.Oauth2FailureHandler;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +27,7 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
-
-import java.io.IOException;
 import java.util.function.Function;
 
 @Slf4j

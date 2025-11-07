@@ -225,14 +225,28 @@ public class RegisteredClientConvert {
         registeredClientPo.setClientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build().getSettings());
         // 手动构建 tokenSettings Map，将 Duration 转换为秒数（double），避免 Jackson 序列化问题
         Map<String, Object> tokenSettingsMap = new HashMap<>();
-        TokenSettings defaultTokenSettings = TokenSettings.builder()
+        
+        // 构建 TokenSettings，使用表单中的值（如果提供）或默认值
+        TokenSettings.Builder tokenSettingsBuilder = TokenSettings.builder()
                 .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
                 .reuseRefreshTokens(true)
-                .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256)
-                .build();
-        // 获取默认的 Duration 值并转换为秒数
-        Map<String, Object> defaultSettings = defaultTokenSettings.getSettings();
-        for (Map.Entry<String, Object> entry : defaultSettings.entrySet()) {
+                .idTokenSignatureAlgorithm(SignatureAlgorithm.RS256);
+        
+        // 如果表单中提供了 accessTokenTimeToLive，使用表单中的值，否则使用默认值
+        if (registeredClientForm.getAccessTokenTimeToLive() != null) {
+            tokenSettingsBuilder.accessTokenTimeToLive(Duration.ofSeconds(registeredClientForm.getAccessTokenTimeToLive()));
+        }
+        
+        // 如果表单中提供了 refreshTokenTimeToLive，使用表单中的值，否则使用默认值
+        if (registeredClientForm.getRefreshTokenTimeToLive() != null) {
+            tokenSettingsBuilder.refreshTokenTimeToLive(Duration.ofSeconds(registeredClientForm.getRefreshTokenTimeToLive()));
+        }
+        
+        TokenSettings tokenSettings = tokenSettingsBuilder.build();
+        
+        // 获取所有设置并转换为秒数（double）
+        Map<String, Object> settings = tokenSettings.getSettings();
+        for (Map.Entry<String, Object> entry : settings.entrySet()) {
             if (entry.getValue() instanceof Duration) {
                 // 将 Duration 转换为秒数（double）
                 tokenSettingsMap.put(entry.getKey(), ((Duration) entry.getValue()).getSeconds() + 0.0);

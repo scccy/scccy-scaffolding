@@ -33,7 +33,7 @@ public class JWKCacheManager {
     @PostConstruct
     public void init() {
         QuickConfig qc = QuickConfig.newBuilder("remote_")
-                .expire(Duration.ofDays(36500L)) // 100年过期时间
+                .expire(Duration.ofDays(365L)) // 1年过期时间，JWK密钥对相对稳定，但需要支持密钥轮换
                 .cacheType(CacheType.BOTH) // two level cache
                 .syncLocal(true) // invalidate local cache in all jvm process after update
                 .build();
