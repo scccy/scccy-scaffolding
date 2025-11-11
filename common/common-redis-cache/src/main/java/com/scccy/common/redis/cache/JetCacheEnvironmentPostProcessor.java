@@ -51,10 +51,10 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         // 否则从 Spring Redis 配置或环境变量构建默认 URI
         String redisUri = null;
         if (!hasRemoteUri) {
-            String redisHost = getProperty(environment, "REDIS_HOST", "spring.redis.host", "localhost");
-            String redisPort = getProperty(environment, "REDIS_PORT", "spring.redis.port", "6379");
-            String redisPassword = getProperty(environment, "REDIS_PASSWORD", "spring.redis.password", "");
-            String redisDatabase = getProperty(environment, "REDIS_DATABASE", "spring.redis.database", "0");
+            String redisHost = getProperty(environment, "REDIS_HOST", "spring.data.redis.host", "localhost");
+            String redisPort = getProperty(environment, "REDIS_PORT", "spring.data.redis.port", "6379");
+            String redisPassword = getProperty(environment, "REDIS_PASSWORD", "spring.data.redis.password", "");
+            String redisDatabase = getProperty(environment, "REDIS_DATABASE", "spring.data.redis.database", "0");
             // 构建 Redis URI
             redisUri = buildRedisUri(redisHost, redisPort, redisPassword, redisDatabase);
         }

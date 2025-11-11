@@ -10,3 +10,4 @@ com.scccy.common.base.config.PermitAllUrlProperties
 com.scccy.common.base.config.ResourceServerConfig
 com.scccy.common.base.exception.GlobalExceptionHandler
 com.scccy.common.base.manager.OkHttpManager
+com.scccy.common.base.service.PermissionService
