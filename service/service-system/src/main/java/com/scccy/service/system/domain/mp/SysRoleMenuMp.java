@@ -32,14 +32,14 @@ public class SysRoleMenuMp extends Model<SysRoleMenuMp> implements Serializable 
      * 角色ID
      */
     @Schema(description = "角色ID")
-    @TableId("role_id")
+    @TableField("role_id")
     private Long roleId;
 
     /**
      * 菜单ID
      */
     @Schema(description = "菜单ID")
-    @TableId("menu_id")
+    @TableField("menu_id")
     private Long menuId;
 
 

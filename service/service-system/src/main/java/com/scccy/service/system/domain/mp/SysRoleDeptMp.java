@@ -32,14 +32,14 @@ public class SysRoleDeptMp extends Model<SysRoleDeptMp> implements Serializable 
      * 角色ID
      */
     @Schema(description = "角色ID")
-    @TableId("role_id")
+    @TableField("role_id")
     private Long roleId;
 
     /**
      * 部门ID
      */
     @Schema(description = "部门ID")
-    @TableId("dept_id")
+    @TableField("dept_id")
     private Long deptId;
 
 
