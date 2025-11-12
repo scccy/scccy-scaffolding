@@ -3,7 +3,6 @@ package com.scccy.service.auth.fegin;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.dto.LoginBody;
-import com.scccy.service.auth.dto.LoginResponse;
 import com.scccy.service.auth.dto.RegisterBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -35,7 +34,7 @@ public class SystemUserClientFallback implements FallbackFactory<SystemUserClien
             }
 
             @Override
-            public ResultData<LoginResponse> register(RegisterBody registerBody) {
+            public ResultData<SysUserMp> register(RegisterBody registerBody) {
                 log.error("service-system 服务不可用，无法注册用户: username={}, 错误原因: {}", 
                         registerBody != null ? registerBody.getUsername() : "unknown", 
                         cause != null ? cause.getMessage() : "未知错误", cause);

@@ -100,7 +100,7 @@ public class AuthService {
      * 流程：
      * 1. 调用 service-system 创建用户
      * 2. 注册成功后，自动生成 JWT Token
-     * 3. 返回 Token 和用户信息
+     * 3. 返回用户信息和 Token
      *
      * @param registerBody 注册信息（包含明文密码）
      * @return 注册结果（包含用户信息和 Token）
@@ -109,8 +109,8 @@ public class AuthService {
         log.info("用户注册: username={}", registerBody.getUsername());
 
         try {
-            // 通过 Feign 调用 service-system 创建用户
-            ResultData<LoginResponse> result = systemUserClient.register(registerBody);
+            // 1. 通过 Feign 调用 service-system 创建用户
+            ResultData<SysUserMp> result = systemUserClient.register(registerBody);
 
             if (result == null || !result.isSuccess()) {
                 log.warn("用户注册失败: username={}, message={}", 
@@ -119,17 +119,22 @@ public class AuthService {
                 return ResultData.fail(result != null ? result.getMessage() : "注册失败");
             }
 
-            LoginResponse loginResponse = result.getData();
-            if (loginResponse == null) {
+            SysUserMp user = result.getData();
+            if (user == null) {
                 log.warn("用户注册失败: username={}, 返回数据为空", registerBody.getUsername());
                 return ResultData.fail("注册失败");
             }
 
             log.info("用户注册成功: username={}, userId={}", 
                 registerBody.getUsername(), 
-                loginResponse.getUserId());
+                user.getUserId());
 
-            // 注册成功后，自动生成 Token
+            // 2. 注册成功后，自动生成 Token
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setUserId(user.getUserId());
+            loginResponse.setUsername(user.getUserName());
+            loginResponse.setNickName(user.getNickName());
+            
             try {
                 LoginResponse tokenResponse = userTokenGenerationService.generateUserToken(registerBody.getUsername());
                 loginResponse.setToken(tokenResponse.getToken());

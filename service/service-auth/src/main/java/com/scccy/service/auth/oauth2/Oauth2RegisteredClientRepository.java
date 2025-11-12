@@ -2,6 +2,7 @@ package com.scccy.service.auth.oauth2;
 
 
 import com.scccy.service.auth.domain.RegisteredClientConvert;
+import com.scccy.service.auth.domain.mp.Oauth2RegisteredClientMp;
 import com.scccy.service.auth.service.IOauth2RegisteredClientService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +30,21 @@ public class Oauth2RegisteredClientRepository implements RegisteredClientReposit
 
     @Override
     public RegisteredClient findById(String id) {
-        return registeredClientConvert.convertToRegisteredClient(oauth2RegisteredClientService.get(id));
+        Oauth2RegisteredClientMp registeredClientPo = oauth2RegisteredClientService.get(id);
+        if (registeredClientPo == null) {
+            log.debug("未找到注册客户端: id={}", id);
+            return null;
+        }
+        return registeredClientConvert.convertToRegisteredClient(registeredClientPo);
     }
 
     @Override
     public RegisteredClient findByClientId(String clientId) {
-        return registeredClientConvert.convertToRegisteredClient(oauth2RegisteredClientService.getByClientId(clientId));
+        Oauth2RegisteredClientMp registeredClientPo = oauth2RegisteredClientService.getByClientId(clientId);
+        if (registeredClientPo == null) {
+            log.debug("未找到注册客户端: clientId={}", clientId);
+            return null;
+        }
+        return registeredClientConvert.convertToRegisteredClient(registeredClientPo);
     }
 }

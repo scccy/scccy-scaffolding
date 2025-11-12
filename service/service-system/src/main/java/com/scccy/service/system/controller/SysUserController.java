@@ -6,7 +6,6 @@ import com.scccy.common.modules.dto.ResultData;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.service.system.dao.service.SysUserMpService;
 import com.scccy.service.system.dto.LoginBody;
-import com.scccy.service.system.dto.LoginResponse;
 import com.scccy.service.system.dto.RegisterBody;
 import com.scccy.service.system.service.UserService;
 import jakarta.validation.Valid;
@@ -52,13 +51,13 @@ public class SysUserController {
      * 注意：此接口为内部接口，仅供 Auth 服务通过 Feign 调用
      * 不对外暴露，客户端应该调用 Auth 服务的 /api/user/register 接口
      * <p>
-     * 此接口不返回 Token，Token 由 Auth 服务生成
+     * 此接口返回用户信息（SysUserMp），Token 由 Auth 服务生成
      *
      * @param registerBody 注册信息（包含明文密码）
      * @return 注册结果（包含用户信息，不包含 Token）
      */
     @PostMapping("/register")
-    public ResultData<LoginResponse> register(@Valid @RequestBody RegisterBody registerBody) {
+    public ResultData<SysUserMp> register(@Valid @RequestBody RegisterBody registerBody) {
         return userService.register(registerBody);
     }
 

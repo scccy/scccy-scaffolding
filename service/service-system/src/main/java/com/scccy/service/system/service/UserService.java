@@ -40,14 +40,15 @@ public class UserService {
     /**
      * 用户注册
      * <p>
-     * 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
-     * 此接口只负责用户注册，不返回 Token
-     * 客户端需要单独调用 Authorization Server 获取 Token
+     * 创建新用户，返回用户信息
+     * <p>
+     * 注意：此接口只负责用户注册，不返回 Token
+     * Token 由 Auth 服务在注册成功后自动生成
      *
      * @param registerBody 注册信息
      * @return 注册结果（包含用户信息，不包含 Token）
      */
-    public ResultData<LoginResponse> register(RegisterBody registerBody) {
+    public ResultData<SysUserMp> register(RegisterBody registerBody) {
         log.info("用户注册: username={}", registerBody.getUsername());
 
         // 1. 验证用户名是否已存在
@@ -78,18 +79,8 @@ public class UserService {
             return ResultData.fail("注册失败");
         }
 
-        // 4. 构建登录响应（不包含 Token）
-        // 在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
-        // 客户端需要单独调用 Authorization Server 获取 Token
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(null);  // 不再返回 Token
-        loginResponse.setUserId(sysUserMp.getUserId());
-        loginResponse.setUsername(sysUserMp.getUserName());
-        loginResponse.setNickName(sysUserMp.getNickName());
-        loginResponse.setExpireTime(null);  // 不再返回过期时间
-
         log.info("用户注册成功: username={}, userId={}", registerBody.getUsername(), sysUserMp.getUserId());
-        return ResultData.ok("注册成功", loginResponse);
+        return ResultData.ok("注册成功", sysUserMp);
     }
 
     /**
