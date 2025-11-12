@@ -1,6 +1,27 @@
 
 # Spring Cloud Gateway配置
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:117.50.197.170}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
+  security:
+    jwt:
+      blacklist:
+        # 黑名单键前缀
+        prefix: jwt:blacklist:
+        # 是否跳过 client_credentials（机器到机器）令牌的黑名单校验
+        skip-client-credentials: true
+        # 按路径前缀跳过（逗号分隔），例如内部健康检查、内部回调
+        skip-path-prefixes: /actuator/,/internal/
   # OAuth2 Resource Server 配置
   security:
     oauth2:

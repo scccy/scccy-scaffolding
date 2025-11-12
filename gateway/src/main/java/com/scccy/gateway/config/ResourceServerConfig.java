@@ -35,8 +35,8 @@ public class ResourceServerConfig {
             .authorizeExchange(exchanges -> exchanges
                 // 公开端点：OAuth2 相关、登录、健康检查、API 文档等
                 .pathMatchers(SecurityPathConstants.PUBLIC_ENDPOINTS).permitAll()
-                // 支持 @Anonymous 注解的路径约定（与业务服务保持一致）
-                .pathMatchers(SecurityPathConstants.ANONYMOUS_PATHS).permitAll()
+                // 注意：@Anonymous 注解的路径由业务服务动态收集并放行
+                // Gateway 作为统一入口，只放行公开端点，业务服务会自行处理 @Anonymous 注解的路径
                 // 其他路径需要认证
                 .anyExchange().authenticated()
             )

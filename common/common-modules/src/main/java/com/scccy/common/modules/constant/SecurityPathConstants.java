@@ -63,39 +63,6 @@ public class SecurityPathConstants {
     };
 
     /**
-     * {@code @Anonymous} 注解支持的路径约定
-     * <p>
-     * 使用 {@code @Anonymous} 注解标记的接口需要使用这些路径约定：
-     * <ul>
-     *     <li>路径包含 /public（如：/demo/permission/public）</li>
-     *     <li>路径包含 /anonymous（如：/api/user/anonymous）</li>
-     *     <li>路径包含 /internal（如：/demo/token/internal/user）</li>
-     * </ul>
-     * <p>
-     * 示例：
-     * <pre>
-     * &#64;Anonymous
-     * &#64;GetMapping("/public")
-     * public ResultData&lt;?&gt; publicEndpoint() {
-     *     // 公开接口，不需要 Token
-     * }
-     * </pre>
-     * <p>
-     * 注意：Spring Security 6.x 路径模式规则：
-     * <ul>
-     *     <li>{@code /**} 必须放在路径末尾</li>
-     *     <li>使用 {@code /**\/public} 匹配包含 {@code /public} 的路径（如：/demo/permission/public）</li>
-     *     <li>使用 {@code /**\/anonymous} 匹配包含 {@code /anonymous} 的路径</li>
-     *     <li>使用 {@code /**\/internal} 匹配包含 {@code /internal} 的路径</li>
-     * </ul>
-     */
-    public static final String[] ANONYMOUS_PATHS = {
-        "/**/public",      // 匹配包含 /public 的路径（如：/demo/permission/public）
-        "/**/anonymous",   // 匹配包含 /anonymous 的路径（如：/api/user/anonymous）
-        "/**/internal"     // 匹配包含 /internal 的路径（如：/demo/token/internal/user）
-    };
-
-    /**
      * Authorization Server 专用公开端点
      * <p>
      * 这些路径仅在 Authorization Server（service-auth）中使用

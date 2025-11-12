@@ -61,7 +61,7 @@ public class JWKCacheManager {
      * @return cache key
      */
     private String getJWKKey() {
-        return AUTHORIZATION_JWS_PREFIX_KEY + ":" + application;
+        return AUTHORIZATION_JWS_PREFIX_KEY + ":" + application;                                                                                     
     }
 
     /**

@@ -116,12 +116,15 @@ public class ResourceServerConfig {
      * <p>
      * 所有服务默认需要 Token 验证，通过 {@code @Anonymous} 注解标记的接口可以放行。
      * <p>
-     * 路径匹配规则（与 Gateway 保持一致）：
+     * 路径匹配规则：
      * <ul>
      *     <li>公开端点：OAuth2、登录、健康检查、API 文档等</li>
-     *     <li>{@code @Anonymous} 注解路径：动态收集（如果 {@code PermitAllUrlProperties} 存在）或使用路径约定</li>
+     *     <li>{@code @Anonymous} 注解路径：动态收集（通过 {@code PermitAllUrlProperties}）</li>
      *     <li>其他路径：需要认证</li>
      * </ul>
+     * <p>
+     * 注意：不再使用路径约定（如 /public、/anonymous、/internal），
+     * 所有匿名访问路径必须通过 {@code @Anonymous} 注解标记。
      *
      * @param http HttpSecurity 配置对象
      * @return SecurityFilterChain
@@ -132,15 +135,13 @@ public class ResourceServerConfig {
         log.info("配置业务服务 Resource Server，issuer-uri: {}", issuerUri);
         log.info("公开端点路径: {}", java.util.Arrays.toString(SecurityPathConstants.PUBLIC_ENDPOINTS));
         
-        // 获取匿名访问路径：优先使用动态收集的路径，否则使用路径约定
+        // 获取匿名访问路径：仅使用动态收集的路径（通过 @Anonymous 注解）
         List<String> anonymousPaths = new ArrayList<>();
         if (permitAllUrlProperties != null && !permitAllUrlProperties.getUrls().isEmpty()) {
             anonymousPaths.addAll(permitAllUrlProperties.getUrls());
             log.info("使用动态收集的匿名访问路径，共 {} 个: {}", anonymousPaths.size(), anonymousPaths);
         } else {
-            // 如果动态收集失败，回退到路径约定
-            anonymousPaths.addAll(Arrays.asList(SecurityPathConstants.ANONYMOUS_PATHS));
-            log.info("使用路径约定作为匿名访问路径: {}", anonymousPaths);
+            log.warn("未找到 @Anonymous 注解标记的路径，请确保使用 @Anonymous 注解标记需要匿名访问的接口");
         }
 
         // 优化性能：使用 securityMatcher 排除静态资源路径
