@@ -2,6 +2,8 @@ package com.scccy.service.auth.service;
 
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
+import com.scccy.service.auth.dto.LoginResponse;
+import com.scccy.service.auth.dto.RegisterBody;
 import com.scccy.service.auth.fegin.SystemUserClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +86,44 @@ public class AuthService {
 
         log.info("用户登录成功: userName={}", userName);
         return authentication;
+    }
+
+    /**
+     * 用户注册
+     * <p>
+     * 通过 Feign 调用 service-system 创建用户
+     * <p>
+     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
+     * 此方法只负责用户注册，不返回 Token
+     * 客户端需要单独调用 Authorization Server 获取 Token
+     *
+     * @param registerBody 注册信息（包含明文密码）
+     * @return 注册结果（包含用户信息，不包含 Token）
+     */
+    public ResultData<LoginResponse> register(RegisterBody registerBody) {
+        log.info("用户注册: username={}", registerBody.getUsername());
+
+        try {
+            // 通过 Feign 调用 service-system 创建用户
+            ResultData<LoginResponse> result = systemUserClient.register(registerBody);
+
+            if (result == null || !result.isSuccess()) {
+                log.warn("用户注册失败: username={}, message={}", 
+                    registerBody.getUsername(), 
+                    result != null ? result.getMessage() : "未知错误");
+                return ResultData.fail(result != null ? result.getMessage() : "注册失败");
+            }
+
+            log.info("用户注册成功: username={}, userId={}", 
+                registerBody.getUsername(), 
+                result.getData() != null ? result.getData().getUserId() : null);
+            
+            return result;
+        } catch (Exception e) {
+            log.error("用户注册异常: username={}, error={}", 
+                registerBody.getUsername(), e.getMessage(), e);
+            return ResultData.fail("注册失败: " + e.getMessage());
+        }
     }
 }
 

@@ -106,6 +106,10 @@ public class AuthorizationServerConfig {
 
         // 允许公开访问的端点
         httpSecurity.authorizeHttpRequests(authorize -> authorize
+                // OAuth2 Token 撤销接口需要认证（排除在公开端点之外）
+                .requestMatchers("/oauth2/revoke").authenticated()
+                // 用户注册和登录接口公开访问（注意：securityMatcher 限制只处理 AUTHORIZATION_SERVER_PUBLIC_ENDPOINTS，这些路径由第二个过滤器链处理）
+                // 其他公开端点（securityMatcher 已限制只处理这些路径）
                 .requestMatchers(SecurityPathConstants.AUTHORIZATION_SERVER_PUBLIC_ENDPOINTS).permitAll()
                 .anyRequest().authenticated()
         );
@@ -131,6 +135,65 @@ public class AuthorizationServerConfig {
                         .jwt(Customizer.withDefaults())
                         .accessDeniedHandler(new Oauth2AccessDeniedHandler())
         );
+        return httpSecurity.build();
+    }
+
+    /**
+     * Resource Server 过滤器链配置
+     * <p>
+     * 处理需要 JWT Token 认证的接口（如 /api/user/logout）
+     * 优先级低于 Authorization Server 过滤器链
+     * <p>
+     * 注意：此过滤器链只处理 `/api/**` 路径，`/oauth2/revoke` 由第一个过滤器链处理（但需要认证）
+     *
+     * @param httpSecurity Spring Security 过滤器链
+     * @return SecurityFilterChain
+     * @throws Exception 初始化异常
+     */
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE + 1)
+    public SecurityFilterChain resourceServerSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        log.info("Init HttpSecurity for Resource Server (Auth Service)");
+
+        httpSecurity
+                // 匹配需要认证的接口（排除 Authorization Server 已处理的端点）
+                .securityMatcher("/api/**")
+                .authorizeHttpRequests(authorize -> authorize
+                        // 用户注册接口公开访问
+                        .requestMatchers("/api/user/register").permitAll()
+                        // 用户登录接口公开访问
+                        .requestMatchers("/api/user/login").permitAll()
+                        // 用户登出接口需要认证
+                        .requestMatchers("/api/user/logout").authenticated()
+                        // 客户端登出接口需要认证
+                        .requestMatchers("/api/client/logout").authenticated()
+                        // 其他 /api/** 接口需要认证
+                        .requestMatchers("/api/**").authenticated()
+                        // 其他请求需要认证
+                        .anyRequest().authenticated()
+                )
+                // 配置 OAuth2 Resource Server
+                .oauth2ResourceServer(resourceServer ->
+                        resourceServer
+                                .jwt(Customizer.withDefaults())
+                                .accessDeniedHandler(new Oauth2AccessDeniedHandler())
+                )
+                // 前后端分离架构：未通过身份验证时返回 401 JSON
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.debug("未认证访问 Resource Server 接口: {}", request.getRequestURI());
+
+                            // 使用 ResultData 统一错误响应格式
+                            ResultData<Object> result = ResultData.fail(HttpStatus.UNAUTHORIZED.value(), "需要有效的访问令牌");
+                            String jsonResponse = JSON.toJSONString(result);
+
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write(jsonResponse);
+                        })
+                );
+
         return httpSecurity.build();
     }
 }

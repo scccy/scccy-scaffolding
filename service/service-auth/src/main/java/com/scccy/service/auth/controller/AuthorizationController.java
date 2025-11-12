@@ -4,20 +4,14 @@ package com.scccy.service.auth.controller;
 import com.github.xingfudeshi.knife4j.core.util.StrUtil;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.domain.ScopeWithDescription;
-import com.scccy.service.auth.dto.LoginBody;
-import com.scccy.service.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
@@ -47,54 +41,6 @@ public class AuthorizationController {
 
     @Resource
     private OAuth2AuthorizationConsentService authorizationConsentService;
-
-    @Resource
-    private AuthService authService;
-
-    /**
-     * 用户登录接口（前后端分离）
-     * <p>
-     * 接收 JSON 格式的登录请求，验证用户信息并返回结果
-     *
-     * @param loginBody 登录请求体（包含用户名和密码）
-     * @return 登录结果
-     */
-    @Operation(
-            summary = "用户登录",
-            description = "前后端分离的登录接口，接收 JSON 格式的用户名和密码，返回登录结果"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "登录成功",
-                    content = @Content(schema = @Schema(implementation = ResultData.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "登录失败，用户名或密码错误",
-                    content = @Content(schema = @Schema(implementation = ResultData.class))
-            )
-    })
-    @PostMapping("/login")
-    @ResponseBody
-    public ResultData<String> login(@Valid @RequestBody LoginBody loginBody) {
-        try {
-            // 调用认证服务进行登录
-            Authentication authentication = authService.authenticate(
-                    loginBody.getUsername(),
-                    loginBody.getPassword()
-            );
-
-            // 登录成功，返回用户名
-            return ResultData.ok("登录成功", authentication.getName());
-        } catch (BadCredentialsException e) {
-            // 登录失败
-            return ResultData.fail("用户名或密码错误");
-        } catch (Exception e) {
-            log.error("登录异常: {}", e.getMessage(), e);
-            return ResultData.fail("登录失败: " + e.getMessage());
-        }
-    }
 
     /**
      * 获取授权确认数据（前后端分离）

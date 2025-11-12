@@ -3,6 +3,7 @@ package com.scccy.service.auth.fegin;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.dto.LoginBody;
+import com.scccy.service.auth.dto.LoginResponse;
 import com.scccy.service.auth.dto.RegisterBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +23,10 @@ public interface SystemUserClient {
      * 用户注册
      *
      * @param registerBody 注册信息（包含明文密码）
-     * @return 注册结果（包含用户信息）
+     * @return 注册结果（包含用户信息，不包含 Token）
      */
     @PostMapping("/register")
-    ResultData<SysUserMp> register(@RequestBody RegisterBody registerBody);
+    ResultData<LoginResponse> register(@RequestBody RegisterBody registerBody);
 
     /**
      * 用户登录
