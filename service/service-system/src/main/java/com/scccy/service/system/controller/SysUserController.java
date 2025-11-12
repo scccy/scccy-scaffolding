@@ -44,13 +44,15 @@ public class SysUserController {
     }
 
     /**
-     * 用户注册
+     * 用户注册（内部接口）
      * <p>
      * 专门用于用户注册的接口，包含注册相关的验证逻辑
      * 接收明文密码，自动加密后保存
      * <p>
-     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
-     * 此接口不返回 Token，客户端需要单独调用 Authorization Server 获取 Token
+     * 注意：此接口为内部接口，仅供 Auth 服务通过 Feign 调用
+     * 不对外暴露，客户端应该调用 Auth 服务的 /api/user/register 接口
+     * <p>
+     * 此接口不返回 Token，Token 由 Auth 服务生成
      *
      * @param registerBody 注册信息（包含明文密码）
      * @return 注册结果（包含用户信息，不包含 Token）
@@ -58,29 +60,6 @@ public class SysUserController {
     @PostMapping("/register")
     public ResultData<LoginResponse> register(@Valid @RequestBody RegisterBody registerBody) {
         return userService.register(registerBody);
-    }
-
-    /**
-     * 用户登录
-     * <p>
-     * 验证用户名和密码，返回用户信息
-     * <p>
-     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
-     * 此接口不返回 Token，客户端需要单独调用 Authorization Server 获取 Token
-     *
-     * @param loginBody 登录信息（用户名和明文密码）
-     * @return 登录结果（包含用户信息，不包含 Token）
-     */
-    @PostMapping("/login")
-    public ResultData<LoginResponse> login(@Valid @RequestBody LoginBody loginBody) {
-        try {
-            LoginResponse loginResponse = userService.login(loginBody.getUsername(), loginBody.getPassword());
-            return ResultData.ok("登录成功", loginResponse);
-        } catch (BadCredentialsException e) {
-            return ResultData.fail(e.getMessage());
-        } catch (Exception e) {
-            return ResultData.fail("登录失败: " + e.getMessage());
-        }
     }
 
     /**

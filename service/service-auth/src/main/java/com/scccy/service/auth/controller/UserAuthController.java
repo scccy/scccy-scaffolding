@@ -48,19 +48,19 @@ public class UserAuthController {
     /**
      * 用户注册接口
      * <p>
-     * 接收 JSON 格式的注册请求，创建新用户
+     * 接收 JSON 格式的注册请求，创建新用户，注册成功后自动生成 Token
      * <p>
-     * 注意：在 OAuth2 架构中，Token 应该由 Authorization Server 统一生成
-     * 此接口不返回 Token，客户端需要单独调用 Authorization Server 获取 Token
-     * <p>
-     * 注册成功后，客户端可以调用登录接口获取 Token
+     * 流程：
+     * 1. 调用 service-system 创建用户
+     * 2. 注册成功后，自动生成 JWT Token
+     * 3. 返回 Token 和用户信息
      *
      * @param registerBody 注册请求体（包含用户名、密码等信息）
-     * @return 注册结果（包含用户信息，不包含 Token）
+     * @return 注册结果（包含用户信息和 Token）
      */
     @Operation(
             summary = "用户注册",
-            description = "前后端分离的注册接口，接收 JSON 格式的用户名和密码等信息，创建新用户。注册成功后，客户端需要单独调用登录接口获取 Token。"
+            description = "前后端分离的注册接口，接收 JSON 格式的用户名和密码等信息，创建新用户。注册成功后，自动生成 JWT Token 并返回。"
     )
     @ApiResponses({
             @ApiResponse(
@@ -83,16 +83,19 @@ public class UserAuthController {
     /**
      * 用户登录接口
      * <p>
-     * 接收 JSON 格式的登录请求，验证用户信息并返回结果
+     * 接收 JSON 格式的登录请求，验证用户信息并生成 Token
      * <p>
-     * 注意：此接口返回的是登录结果，实际 Token 需要通过 OAuth2 授权流程获取
+     * 流程：
+     * 1. 验证用户凭证
+     * 2. 登录成功后，生成 JWT Token
+     * 3. 返回 Token 和用户信息
      *
      * @param loginBody 登录请求体（包含用户名和密码）
-     * @return 登录结果
+     * @return 登录结果（包含 Token 和用户信息）
      */
     @Operation(
             summary = "用户登录",
-            description = "前后端分离的登录接口，接收 JSON 格式的用户名和密码，返回登录结果。实际 Token 需要通过 OAuth2 授权流程获取。"
+            description = "前后端分离的登录接口，接收 JSON 格式的用户名和密码，验证用户信息并生成 JWT Token。"
     )
     @ApiResponses({
             @ApiResponse(
@@ -108,17 +111,17 @@ public class UserAuthController {
     })
     @PostMapping("/login")
     @ResponseBody
-    public ResultData<String> login(@Valid @RequestBody LoginBody loginBody) {
+    public ResultData<LoginResponse> login(@Valid @RequestBody LoginBody loginBody) {
         try {
-            // 调用认证服务进行登录
-            org.springframework.security.core.Authentication authentication = authService.authenticate(
+            // 调用认证服务进行登录并生成 Token
+            LoginResponse loginResponse = authService.login(
                     loginBody.getUsername(),
                     loginBody.getPassword()
             );
 
-            // 登录成功，返回用户名
-            log.info("用户登录成功: username={}", authentication.getName());
-            return ResultData.ok("登录成功", authentication.getName());
+            log.info("用户登录成功: username={}, userId={}", 
+                loginResponse.getUsername(), loginResponse.getUserId());
+            return ResultData.ok("登录成功", loginResponse);
         } catch (BadCredentialsException e) {
             // 登录失败
             log.warn("用户登录失败: username={}, error={}", loginBody.getUsername(), e.getMessage());

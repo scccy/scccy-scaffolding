@@ -3,9 +3,9 @@
 spring:
   data:
     redis:
-      host: ${REDIS_HOST:117.50.197.170}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD:XdiwWEW15e}
       database: ${REDIS_DATABASE:0}
       timeout: 10000ms
       lettuce:
@@ -49,6 +49,12 @@ spring:
 
       # 路由配置
           routes:
+            - id: 认证服务
+              uri: lb://service-auth
+              predicates:
+                - Path=/api/user/**,/oauth2/**
+              filters:
+                - name: UserInfoGatewayFilter  # 应用用户信息过滤器
             - id: 系统服务
               uri: lb://service-demo
               predicates:

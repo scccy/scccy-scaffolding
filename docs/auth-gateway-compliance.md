@@ -116,3 +116,7 @@
 - TTL：`exp - now`（毫秒）
 
 > 注：使用 jti 更稳妥，避免存储整串 Token；签发时在 claims 中确保包含 jti。
+
+
+
+
