@@ -27,7 +27,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @ConditionalOnClass(HttpSecurity.class)
 @ConditionalOnMissingBean(SecurityFilterChain.class)
-@ConditionalOnProperty(name = "scccy.security.permit-all", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "scccy.security.permit-all", havingValue = "true")
 public class DevPermitAllSecurityConfig {
 
 	@Bean

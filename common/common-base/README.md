@@ -30,6 +30,12 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - `DataSourceConfig`: 数据源配置
 - `TransactionConfig`: 事务配置
 
+### 安全配置开关
+
+- `spring.security.oauth2.resourceserver.jwt.issuer-uri`：配置后启用标准资源服务器过滤链。
+- `scccy.security.permit-all`：显式设为 `true` 时启用开发期全放行链，适合无鉴权的临时联调；默认 `false`。
+- 两者互斥：当 `permit-all=true` 时不会装配资源服务器链；当配置了 `issuer-uri` 且 `permit-all!=true` 时只启用资源服务器链，以避免重复匹配 `any request` 导致的 `UnreachableFilterChainException`。
+
 ### 注解
 
 - `@ScccyServiceApplication`: 微服务启动类统一注解，自动配置扫描路径和组件

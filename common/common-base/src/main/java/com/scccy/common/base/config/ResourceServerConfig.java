@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -99,6 +100,12 @@ import static org.springframework.http.server.PathContainer.parsePath;
     name = "spring.security.oauth2.resourceserver.jwt.issuer-uri",
     matchIfMissing = false
 )
+@ConditionalOnProperty(
+    name = "scccy.security.permit-all",
+    havingValue = "false",
+    matchIfMissing = true
+)
+@ConditionalOnMissingBean(SecurityFilterChain.class)
 public class ResourceServerConfig {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")

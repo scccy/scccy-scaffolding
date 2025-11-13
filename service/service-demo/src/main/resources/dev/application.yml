@@ -3,7 +3,7 @@
 
 # 服务器配置
 server:
-  port: 30001
+  port: 30003
   servlet:
     context-path: /
 
