@@ -17,19 +17,19 @@ spring:
     jwt:
       blacklist:
         # 黑名单键前缀
-        prefix: jwt:blacklist:
+        prefix: "jwt:blacklist:"
         # 是否跳过 client_credentials（机器到机器）令牌的黑名单校验
         skip-client-credentials: true
         # 按路径前缀跳过（逗号分隔），例如内部健康检查、内部回调
         skip-path-prefixes: /actuator/,/internal/
-  # OAuth2 Resource Server 配置
-  security:
     oauth2:
       resourceserver:
-        jwt:
-          issuer-uri: http://service-auth:30003  # Authorization Server 地址（使用服务名，适用于微服务环境）
-          # 或显式配置 JWK Set URI
-          # jwk-set-uri: http://service-auth:30003/oauth2/jwks
+              jwt:
+                issuer-uri: http://service-auth:30003  # Authorization Server 地址（使用服务名，适用于微服务环境）
+                # 或显式配置 JWK Set URI
+                # jwk-set-uri: http://service-auth:30003/oauth2/jwks
+  # OAuth2 Resource Server 配置
+
 
   cloud:
     gateway:

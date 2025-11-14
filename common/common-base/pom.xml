@@ -83,6 +83,12 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <!-- Redis Cache - JetCache 多级缓存 -->
+        <dependency>
+            <groupId>com.scccy</groupId>
+            <artifactId>common-redis-cache</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
         <!-- OkHttp3 - HTTP客户端 -->
         <dependency>

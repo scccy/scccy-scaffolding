@@ -15,6 +15,7 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - **HTTP 客户端**: 集成 OkHttp3，提供 HTTP 请求能力
 - **OpenFeign 配置**: 提供微服务间调用的 Feign 客户端配置
 - **权限服务**: 提供统一的权限验证接口
+- **内部令牌管理**: 自动管理服务间调用的 OAuth2 内部令牌，支持缓存和自动刷新
 
 ## 核心组件
 
@@ -36,6 +37,40 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - `scccy.security.permit-all`：显式设为 `true` 时启用开发期全放行链，适合无鉴权的临时联调；默认 `false`。
 - 两者互斥：当 `permit-all=true` 时不会装配资源服务器链；当配置了 `issuer-uri` 且 `permit-all!=true` 时只启用资源服务器链，以避免重复匹配 `any request` 导致的 `UnreachableFilterChainException`。
 
+### 内部令牌配置
+
+内部令牌功能已自动启用，默认配置如下（可通过 yml 或环境变量覆盖）：
+
+- **默认配置**（无需手动配置）：
+  - `scccy.internal-token.enabled`: `true`（默认启用）
+  - `scccy.internal-token.client-id`: `internal-service-client`
+  - `scccy.internal-token.client-secret`: `InternalSecret123!`
+  - `scccy.internal-token.token-url`: `http://service-auth:30002/oauth2/token`
+  - `scccy.internal-token.scope`: `internal-service`
+  - `scccy.internal-token.cache-expire-seconds`: `540`（9分钟，略小于token有效期）
+  - `scccy.internal-token.refresh-ahead-seconds`: `60`（提前1分钟刷新）
+
+- **使用方式**：
+  ```java
+  @Resource
+  private InternalTokenManager tokenManager;
+  
+  public void someMethod() {
+      String token = tokenManager.getToken();  // 自动获取并缓存token
+  }
+  ```
+
+- **配置覆盖优先级**（从高到低）：
+  1. Nacos 配置中心配置
+  2. 应用本地 application.yml 配置
+  3. 环境变量（如 `SCCCY_INTERNAL_TOKEN_CLIENT_ID`）
+  4. 默认配置（最低优先级）
+
+- **特性**：
+  - 自动缓存：使用 JetCache 两级缓存（本地 + Redis），避免频繁请求
+  - 自动刷新：token 过期前自动刷新，不阻塞请求
+  - 异常处理：完善的错误处理和日志记录
+
 ### 注解
 
 - `@ScccyServiceApplication`: 微服务启动类统一注解，自动配置扫描路径和组件
@@ -44,9 +79,13 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 
 - `PermissionService`: 权限验证服务接口
 
+### 管理器
+
+- `InternalTokenManager`: 内部服务令牌管理器，负责获取和缓存 OAuth2 access token
+- `OkHttpManager`: OkHttp3 HTTP 客户端管理器
+
 ### 工具类
 
-- `OkHttpManager`: OkHttp3 HTTP 客户端管理器
 - `CurrentUserArgumentResolver`: 当前用户参数解析器
 - `CurrentUserAspect`: 当前用户切面
 
@@ -67,6 +106,7 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - OpenFeign
 - OkHttp3
 - FastJSON2
+- JetCache（多级缓存，通过 common-redis-cache 模块引入）
 
 ## 版本要求
 
