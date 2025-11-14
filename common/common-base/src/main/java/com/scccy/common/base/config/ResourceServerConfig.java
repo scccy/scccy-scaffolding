@@ -117,6 +117,9 @@ public class ResourceServerConfig {
     @Autowired(required = false)
     private PermitAllUrlProperties permitAllUrlProperties;
 
+    @Autowired(required = false)
+    private InternalOnlyUrlProperties internalOnlyUrlProperties;
+
 
     /**
      * Resource Server SecurityFilterChain 配置
@@ -151,6 +154,12 @@ public class ResourceServerConfig {
             log.warn("未找到 @Anonymous 注解标记的路径，请确保使用 @Anonymous 注解标记需要匿名访问的接口");
         }
 
+        List<InternalOnlyUrlProperties.InternalEndpointDefinition> internalEndpoints = new ArrayList<>();
+        if (internalOnlyUrlProperties != null && !internalOnlyUrlProperties.getEndpoints().isEmpty()) {
+            internalEndpoints.addAll(internalOnlyUrlProperties.getEndpoints());
+            log.info("检测到 {} 条内部接口规则，将要求对应 scope", internalEndpoints.size());
+        }
+
         // 优化性能：使用 securityMatcher 排除静态资源路径
         // 静态资源请求将完全跳过 Spring Security 过滤器链，直接由 Spring MVC 处理
         // 这样可以显著提升静态资源加载速度
@@ -176,7 +185,13 @@ public class ResourceServerConfig {
                 if (!anonymousPaths.isEmpty()) {
                     auth.requestMatchers(anonymousPaths.toArray(new String[0])).permitAll();
                 }
-                
+
+                // 内部接口：必须携带指定 scope（默认 internal-service）
+                internalEndpoints.forEach(endpoint -> auth
+                    .requestMatchers(endpoint.pattern())
+                    .hasAuthority(resolveScopeAuthority(endpoint.scope()))
+                );
+
                 // 其他路径需要认证
                 auth.anyRequest().authenticated();
             })
@@ -261,5 +276,11 @@ public class ResourceServerConfig {
         // 返回 OR 匹配器：匹配任意一个模式即认为是静态资源
         return new OrRequestMatcher(matchers);
     }
-}
 
+    private String resolveScopeAuthority(String scope) {
+        if (scope == null || scope.isBlank()) {
+            return "SCOPE_internal-service";
+        }
+        return scope.startsWith("SCOPE_") ? scope : "SCOPE_" + scope;
+    }
+}
