@@ -42,6 +42,63 @@ spring:
           max-idle: 8
           min-idle: 0
 
+# ============== JetCache 缓存配置 ==============
+jetcache:
+  statIntervalMinutes: 10
+  hidePackages: io.github.opensabre
+
+  local:
+    default:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 300000
+      expireAfterAccessInMillis: 180000
+    longTime:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 3600000
+      expireAfterAccessInMillis: 1800000
+    shortTime:
+      type: caffeine
+      keyConvertor: jackson
+      expireAfterWriteInMillis: 60000
+      expireAfterAccessInMillis: 40000
+
+  remote:
+    default:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 7200000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      uri: redis://:${REDIS_PASSWORD:XdiwWEW15e}@${REDIS_HOST:117.50.197.170}:${REDIS_PORT:6379}/${REDIS_DATABASE:0}
+    longTime:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 43200000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      uri: redis://:${REDIS_PASSWORD:XdiwWEW15e}@${REDIS_HOST:117.50.197.170}:${REDIS_PORT:6379}/${REDIS_DATABASE:0}
+    shortTime:
+      type: redis.lettuce
+      expireAfterWriteInMillis: 300000
+      keyConvertor: jackson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      uri: redis://:${REDIS_PASSWORD:XdiwWEW15e}@${REDIS_HOST:117.50.197.170}:${REDIS_PORT:6379}/${REDIS_DATABASE:0}
+
 
 # 链路追踪配置
 management:
@@ -108,8 +165,6 @@ knife4j:
 #    secret: S6CsnS8AnPVyb8vvChcdXm4R3p6A6KlAISxBg3IIEgk=
 #    server: http://localhost:10086
 #    namespace: spring3
-
-
 
 
 

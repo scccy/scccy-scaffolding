@@ -82,7 +82,11 @@
             <artifactId>common-modules</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-
+        <!-- WebClient (reactive) for internal token fetching -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
         <!-- Redis Cache - JetCache 多级缓存 -->
         <dependency>
             <groupId>com.scccy</groupId>

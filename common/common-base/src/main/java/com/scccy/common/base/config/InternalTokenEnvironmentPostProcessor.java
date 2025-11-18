@@ -46,7 +46,7 @@ public class InternalTokenEnvironmentPostProcessor implements EnvironmentPostPro
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.enabled", "true");
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.client-id", "internal-service-client");
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.client-secret", "InternalSecret123!");
-        setIfAbsent(environment, defaultProperties, "scccy.internal-token.token-url", "http://service-auth:30002/oauth2/token");
+        setIfAbsent(environment, defaultProperties, "scccy.internal-token.token-url", "lb://service-auth/oauth2/token");
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.scope", "internal-service");
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.cache-expire-seconds", "540");
         setIfAbsent(environment, defaultProperties, "scccy.internal-token.refresh-ahead-seconds", "60");
@@ -91,4 +91,3 @@ public class InternalTokenEnvironmentPostProcessor implements EnvironmentPostPro
         }
     }
 }
-

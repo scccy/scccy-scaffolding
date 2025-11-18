@@ -8,19 +8,28 @@ import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.template.QuickConfig;
 import com.scccy.common.base.config.properties.InternalTokenProperties;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 内部服务令牌管理器
@@ -41,13 +50,23 @@ public class InternalTokenManager {
     private InternalTokenProperties properties;
     
     @Resource
-    private OkHttpClient okHttpClient;
+    @Qualifier("loadBalancedWebClientBuilder")
+    private WebClient.Builder webClientBuilder;
     
     @Resource
     private CacheManager cacheManager;
     
     private Cache<String, String> tokenCache;
     private Cache<String, Long> expireTimeCache;
+    private WebClient webClient;
+    private final ExecutorService refreshExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "internal-token-refresh");
+        t.setDaemon(true);
+        return t;
+    });
+    private final ReentrantLock refreshLock = new ReentrantLock();
+    private static final int MAX_REFRESH_RETRY = 3;
+    private static final long RETRY_BACKOFF_MS = 300;
     
     @PostConstruct
     public void init() {
@@ -63,6 +82,7 @@ public class InternalTokenManager {
                 .syncLocal(true)
                 .build();
         tokenCache = cacheManager.getOrCreateCache(tokenCacheConfig);
+        System.out.println(tokenCacheConfig.toString());
         
         // 初始化过期时间缓存（仅本地缓存，用于判断是否需要提前刷新）
         QuickConfig expireTimeCacheConfig = QuickConfig.newBuilder("local_internal_token_expire:")
@@ -70,6 +90,9 @@ public class InternalTokenManager {
                 .cacheType(CacheType.LOCAL)
                 .build();
         expireTimeCache = cacheManager.getOrCreateCache(expireTimeCacheConfig);
+        
+        this.webClient = webClientBuilder.clone()
+            .build();
         
         log.info("内部令牌管理器初始化完成，tokenUrl: {}, scope: {}", 
                 properties.getTokenUrl(), properties.getScope());
@@ -122,83 +145,99 @@ public class InternalTokenManager {
      * @return 新的 access token
      */
     private String refreshToken() {
+        refreshLock.lock();
         try {
-            // 构建 Basic Auth header
+            String cached = tokenCache.get(TOKEN_CACHE_KEY);
+            if (cached != null) {
+                return cached;
+            }
+            RuntimeException last = null;
+            for (int attempt = 1; attempt <= MAX_REFRESH_RETRY; attempt++) {
+                try {
+                    return fetchToken();
+                } catch (RuntimeException e) {
+                    last = e;
+                    if (attempt < MAX_REFRESH_RETRY) {
+                        log.warn("获取内部令牌失败，重试 {}/{}", attempt, MAX_REFRESH_RETRY, e);
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(RETRY_BACKOFF_MS);
+                        } catch (InterruptedException ignored) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
+            }
+            throw last != null ? last : new RuntimeException("获取内部令牌失败");
+        } finally {
+            refreshLock.unlock();
+        }
+    }
+
+    private String fetchToken() {
+        try {
             String credentials = properties.getClientId() + ":" + properties.getClientSecret();
             String basicAuth = "Basic " + Base64.getEncoder().encodeToString(
-                    credentials.getBytes(StandardCharsets.UTF_8));
-            
-            // 构建请求体（使用 application/x-www-form-urlencoded）
-            FormBody.Builder formBodyBuilder = new FormBody.Builder()
-                    .add("grant_type", "client_credentials")
-                    .add("scope", properties.getScope());
-            
-            RequestBody requestBody = formBodyBuilder.build();
-            
-            // 构建请求
-            Request request = new Request.Builder()
-                    .url(properties.getTokenUrl())
-                    .header("Authorization", basicAuth)
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .post(requestBody)
-                    .build();
-            
-            // 执行请求
-            try (Response response = okHttpClient.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    String errorBody = response.body() != null ? response.body().string() : "";
-                    log.error("获取内部令牌失败，状态码: {}, 响应: {}", response.code(), errorBody);
-                    throw new RuntimeException("获取内部令牌失败: " + response.code() + " - " + errorBody);
-                }
-                
-                ResponseBody responseBody = response.body();
-                if (responseBody == null) {
-                    throw new RuntimeException("获取内部令牌失败: 响应体为空");
-                }
-                
-                String responseText = responseBody.string();
-                JSONObject jsonResponse = JSON.parseObject(responseText);
-                
-                String accessToken = jsonResponse.getString("access_token");
-                if (accessToken == null) {
-                    log.error("获取内部令牌失败，响应中缺少 access_token: {}", responseText);
-                    throw new RuntimeException("获取内部令牌失败: 响应中缺少 access_token");
-                }
-                
-                // 计算过期时间（如果响应中包含 expires_in）
-                Long expiresIn = jsonResponse.getLong("expires_in");
-                if (expiresIn != null && expiresIn > 0) {
-                    long expireTime = System.currentTimeMillis() / 1000 + expiresIn;
-                    expireTimeCache.put(TOKEN_EXPIRE_TIME_KEY, expireTime);
-                }
-                
-                // 缓存 token
-                tokenCache.put(TOKEN_CACHE_KEY, accessToken);
-                
-                log.info("成功获取内部令牌，过期时间: {} 秒", expiresIn);
-                return accessToken;
+                credentials.getBytes(StandardCharsets.UTF_8));
+
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("grant_type", "client_credentials");
+            formData.add("scope", properties.getScope());
+
+            String responseText = webClient.post()
+                .uri(properties.getTokenUrl())
+                .header(HttpHeaders.AUTHORIZATION, basicAuth)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(formData))
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(10))
+                .block();
+
+            log.debug("内部令牌接口响应: {}", responseText);
+
+            if (responseText == null) {
+                throw new RuntimeException("获取内部令牌失败: 响应体为空");
             }
-        } catch (IOException e) {
-            log.error("获取内部令牌时发生 IO 异常", e);
-            throw new RuntimeException("获取内部令牌失败: " + e.getMessage(), e);
+
+            JSONObject jsonResponse = JSON.parseObject(responseText);
+            String accessToken = jsonResponse.getString("access_token");
+            if (accessToken == null) {
+                log.error("获取内部令牌失败，响应中缺少 access_token: {}", responseText);
+                throw new RuntimeException("获取内部令牌失败: 响应中缺少 access_token");
+            }
+
+            Long expiresIn = jsonResponse.getLong("expires_in");
+            if (expiresIn != null && expiresIn > 0) {
+                long expireTime = System.currentTimeMillis() / 1000 + expiresIn;
+                expireTimeCache.put(TOKEN_EXPIRE_TIME_KEY, expireTime);
+            }
+
+            tokenCache.put(TOKEN_CACHE_KEY, accessToken);
+            log.info("成功获取内部令牌，过期时间: {} 秒", expiresIn);
+            return accessToken;
+        } catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            log.error("获取内部令牌失败，状态码: {}, 响应: {}", e.getRawStatusCode(), errorBody);
+            throw new RuntimeException("获取内部令牌失败: " + e.getRawStatusCode() + " - " + errorBody, e);
         } catch (Exception e) {
             log.error("获取内部令牌时发生异常", e);
             throw new RuntimeException("获取内部令牌失败: " + e.getMessage(), e);
         }
     }
-    
+
     /**
      * 异步刷新令牌（不阻塞当前请求）
      */
     private void refreshTokenAsync() {
         // 使用线程池异步刷新，避免阻塞当前请求
-        new Thread(() -> {
+        refreshExecutor.submit(() -> {
             try {
                 refreshToken();
             } catch (Exception e) {
                 log.warn("异步刷新内部令牌失败", e);
             }
-        }).start();
+        });
     }
     
     /**
@@ -209,5 +248,9 @@ public class InternalTokenManager {
         expireTimeCache.remove(TOKEN_EXPIRE_TIME_KEY);
         log.info("已清除内部令牌缓存");
     }
-}
 
+    @PreDestroy
+    public void destroy() {
+        refreshExecutor.shutdownNow();
+    }
+}

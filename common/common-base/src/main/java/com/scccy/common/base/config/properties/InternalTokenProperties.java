@@ -34,9 +34,9 @@ public class InternalTokenProperties {
     
     /**
      * OAuth2 Token 端点 URL
-     * 默认: http://service-auth:30002/oauth2/token
+     * 默认: lb://service-auth/oauth2/token
      */
-    private String tokenUrl = "http://service-auth:30002/oauth2/token";
+    private String tokenUrl = "lb://service-auth/oauth2/token";
     
     /**
      * OAuth2 Scope
@@ -56,4 +56,3 @@ public class InternalTokenProperties {
      */
     private Long refreshAheadSeconds = 60L;
 }
-

@@ -50,7 +50,7 @@
   - `refreshToken(token)` - 刷新Token（可选）
 
 #### 1.3 JWT中存储的用户信息
-```json
+```text
 {
   "sub": "userId",           // 用户ID（标准claim）
   "username": "admin",        // 用户名（自定义claim）

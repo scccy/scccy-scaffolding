@@ -106,3 +106,11 @@
   - 可在权限变更时批量将相关 Token 加入黑名单，或缩短 Token TTL 配合刷新。
 - 业务服务是否需要黑名单？
   - 不需要，统一由 Gateway 拦截；业务只消费用户上下文请求头。
+
+---
+
+## 八、内部接口 Scope 控制
+- 对纯内部的 Feign/RPC 调用接口，在 Controller 或方法上添加 `@InternalOnly(scope = "internal-service")`。
+- 启动时 `InternalOnlyUrlProperties` 会收集这些路径，并由资源服务器自动要求 `SCOPE_<scope>`。
+- 默认 scope 为 `internal-service`，与内部 client_credentials 令牌保持一致，可按需覆盖，例如 `@InternalOnly(scope = "reporting")`。
+- 普通用户 JWT 不会携带该 scope，避免前端绕过；内部 Feign 可依靠自动注入的内部令牌通过校验。

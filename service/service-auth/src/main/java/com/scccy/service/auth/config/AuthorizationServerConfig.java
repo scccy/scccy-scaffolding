@@ -19,6 +19,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -81,7 +82,7 @@ public class AuthorizationServerConfig {
                 // 包括 OAuth2 端点、登录端点、文档端点等，避免与其他过滤器链冲突
                 .securityMatcher(SecurityPathConstants.AUTHORIZATION_SERVER_PUBLIC_ENDPOINTS)
                 // 文档与公开端点不需要 CSRF 保护，避免 POST 公开接口被 403
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .with(authorizationServerConfigurer, configurer -> configurer
                         // 设置客户端授权中失败的handler处理
                         .clientAuthentication((auth) -> auth.errorResponseHandler(errorResponseHandler))
@@ -161,14 +162,14 @@ public class AuthorizationServerConfig {
                 // 匹配需要认证的接口（排除 Authorization Server 已处理的端点）
                 .securityMatcher("/api/**")
                 // 前后端分离 API 模式下关闭 CSRF，放行无需认证的 POST 注册/登录
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         // 用户注册接口公开访问
-                        .requestMatchers("/api/user/register").permitAll()
+                        .requestMatchers("/api/system/user/register").permitAll()
                         // 用户登录接口公开访问
-                        .requestMatchers("/api/user/login").permitAll()
+                        .requestMatchers("/api/system/user/login").permitAll()
                         // 用户登出接口需要认证
-                        .requestMatchers("/api/user/logout").authenticated()
+                        .requestMatchers("/api/system/user/logout").authenticated()
                         // 客户端登出接口需要认证
                         .requestMatchers("/api/client/logout").authenticated()
                         // 其他 /api/** 接口需要认证

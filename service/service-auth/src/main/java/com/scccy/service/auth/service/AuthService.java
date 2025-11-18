@@ -150,7 +150,7 @@ public class AuthService {
             
             return ResultData.ok("注册成功", loginResponse);
         } catch (Exception e) {
-            log.error("用户注册异常: username={}, error={}", 
+            log.error("用户注册异常: username={}, error={}",
                 registerBody.getUsername(), e.getMessage(), e);
             return ResultData.fail("注册失败: " + e.getMessage());
         }

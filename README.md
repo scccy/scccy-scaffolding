@@ -78,6 +78,8 @@ mvn spring-boot:run -pl service/service-system -am
   - `/oauth2/**` 提供客户端凭证、授权码、设备码等 OAuth2 流程
 - `service-system` 内部接口通过 `@Anonymous` 标注，供 Auth 服务通过 Feign 调用完成注册与权限查询。
 - Gateway 校验 JWT、同步黑名单，统一路由 `/api/user/**` 到 Auth，其他前缀到对应服务。
+- 业务服务可通过 `@InternalOnly` 注解声明仅允许内部 `scope` 的接口，资源服务器会自动要求 `SCOPE_internal-service` 等内部凭证。
+- 更详细的角色与注解用法可见 `docs/auth-behavior.md`。
 
 ## 开发调试提示
 - Base 模块提供 `DevPermitAllSecurityConfig`，在单服务联调场景可通过 `scccy.security.permit-all=true` 启用全局放行；生产请关闭并通过网关或资源服务器校验。
@@ -112,4 +114,3 @@ cat nacos_config_export/DEFAULT_GROUP/gateway.yaml
 - 结合 Docker Compose 或 Kubernetes 部署，实现生产级监控、日志与链路追踪。
 
 如需更多细节，可参考 `docs/` 下的详细设计文档及各模块中自带的 README。欢迎在此脚手架基础上扩展业务能力。 
-
