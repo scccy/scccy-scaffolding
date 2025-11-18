@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "service-system", path = "/api/sysUser", fallbackFactory = SystemUserClientFallback.class)
+@FeignClient(name = "service-system", path = "/api/system/sysUser", fallbackFactory = SystemUserClientFallback.class)
 public interface SystemUserClient {
 
     @GetMapping("/userName")
