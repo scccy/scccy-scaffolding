@@ -42,12 +42,15 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        // 检查是否已经在 application.yml 或环境变量中配置了 Redis URI
-        // 注意：Nacos 配置会在 EnvironmentPostProcessor 之后加载，所以这里检查的是本地配置
-        // 如果 Nacos 中配置了 URI，会在之后加载并覆盖此默认值
-        boolean hasRemoteUri = environment.containsProperty("jetcache.remote.default.uri") 
-            || environment.containsProperty("jetcache.remote.longTime.uri")
-            || environment.containsProperty("jetcache.remote.shortTime.uri");
+        // 检查是否已经在配置中设置了 Redis URI（包括 Nacos、application.yml、环境变量等）
+        // 注意：当使用 spring.config.import: nacos:... 时，Nacos 配置可能在 EnvironmentPostProcessor 之前已加载
+        // 因此需要检查实际属性值，而不仅仅是 containsProperty
+        String defaultUri = environment.getProperty("jetcache.remote.default.uri");
+        String longTimeUri = environment.getProperty("jetcache.remote.longTime.uri");
+        String shortTimeUri = environment.getProperty("jetcache.remote.shortTime.uri");
+        boolean hasRemoteUri = (defaultUri != null && !defaultUri.trim().isEmpty())
+            || (longTimeUri != null && !longTimeUri.trim().isEmpty())
+            || (shortTimeUri != null && !shortTimeUri.trim().isEmpty());
         
         // 获取 Redis 连接信息（仅在未配置 URI 时使用）
         // 如果用户已在 application.yml 或环境变量中配置了 URI，则使用用户配置
@@ -71,28 +74,28 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         
         // 本地缓存配置 - default
         setIfAbsent(environment, defaultProperties, "jetcache.local.default.type", "caffeine");
-        setIfAbsent(environment, defaultProperties, "jetcache.local.default.keyConvertor", "jackson");
+        setIfAbsent(environment, defaultProperties, "jetcache.local.default.keyConvertor", "fastjson2");
         setIfAbsent(environment, defaultProperties, "jetcache.local.default.expireAfterWriteInMillis", "300000");
         setIfAbsent(environment, defaultProperties, "jetcache.local.default.expireAfterAccessInMillis", "180000");
         
         // 本地缓存配置 - longTime
         setIfAbsent(environment, defaultProperties, "jetcache.local.longTime.type", "caffeine");
-        setIfAbsent(environment, defaultProperties, "jetcache.local.longTime.keyConvertor", "jackson");
+        setIfAbsent(environment, defaultProperties, "jetcache.local.longTime.keyConvertor", "fastjson2");
         setIfAbsent(environment, defaultProperties, "jetcache.local.longTime.expireAfterWriteInMillis", "3600000");
         setIfAbsent(environment, defaultProperties, "jetcache.local.longTime.expireAfterAccessInMillis", "1800000");
         
         // 本地缓存配置 - shortTime
         setIfAbsent(environment, defaultProperties, "jetcache.local.shortTime.type", "caffeine");
-        setIfAbsent(environment, defaultProperties, "jetcache.local.shortTime.keyConvertor", "jackson");
+        setIfAbsent(environment, defaultProperties, "jetcache.local.shortTime.keyConvertor", "fastjson2");
         setIfAbsent(environment, defaultProperties, "jetcache.local.shortTime.expireAfterWriteInMillis", "60000");
         setIfAbsent(environment, defaultProperties, "jetcache.local.shortTime.expireAfterAccessInMillis", "40000");
         
         // 远程缓存配置 - default（仅在未配置 URI 时设置默认 URI）
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.expireAfterWriteInMillis", "7200000");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueEncoder", FASTJSON2_ENCODER);
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueDecoder", FASTJSON2_DECODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.keyConvertor", "fastjson2");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueEncoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueDecoder", "java");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.maxTotal", "50");
@@ -103,9 +106,9 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         // 远程缓存配置 - longTime（仅在未配置 URI 时设置默认 URI）
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.expireAfterWriteInMillis", "43200000");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueEncoder", FASTJSON2_ENCODER);
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueDecoder", FASTJSON2_DECODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.keyConvertor", "fastjson2");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueEncoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueDecoder", "java");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.maxTotal", "50");
@@ -116,14 +119,29 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         // 远程缓存配置 - shortTime（仅在未配置 URI 时设置默认 URI）
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.expireAfterWriteInMillis", "300000");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueEncoder", FASTJSON2_ENCODER);
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueDecoder", FASTJSON2_DECODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.keyConvertor", "fastjson2");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueEncoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueDecoder", "java");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.maxTotal", "50");
         if (redisUri != null) {
             setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.uri", redisUri);
+        }
+        
+        // 远程缓存配置 - remote_internal_token（内部 token 缓存区域）
+        // 注意：区域名称是 "remote_internal_token:"，在配置中使用 "remote_internal_token"（去掉冒号）
+        // 根据 JetCache 官方文档，使用 fastjson2 作为 keyConvertor，string 作为 valueEncoder/valueDecoder
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.type", "redis.lettuce");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.expireAfterWriteInMillis", "600000"); // 默认 10 分钟
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.keyConvertor", "fastjson2");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.valueEncoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.valueDecoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.poolConfig.minIdle", "5");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.poolConfig.maxIdle", "20");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.poolConfig.maxTotal", "50");
+        if (redisUri != null) {
+            setIfAbsent(environment, defaultProperties, "jetcache.remote.remote_internal_token.uri", redisUri);
         }
         
         // 将默认配置添加到环境变量中（最低优先级）
@@ -154,10 +172,16 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
     }
     
     /**
-     * 设置属性值（仅在属性不存在时设置）
+     * 设置属性值（仅在属性不存在或为空时设置）
+     * <p>
+     * 注意：使用 getProperty() 而不是 containsProperty() 来检查，因为：
+     * 1. containsProperty() 在 Nacos 配置存在 jetcache 相关配置时可能返回 true，即使具体属性缺失
+     * 2. getProperty() 更准确地判断属性值是否存在且非空
+     * </p>
      */
     private void setIfAbsent(ConfigurableEnvironment environment, Map<String, Object> properties, String key, String value) {
-        if (!environment.containsProperty(key)) {
+        String existingValue = environment.getProperty(key);
+        if (existingValue == null || existingValue.trim().isEmpty()) {
             properties.put(key, value);
         }
     }

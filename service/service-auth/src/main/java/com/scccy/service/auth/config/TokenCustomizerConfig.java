@@ -1,7 +1,7 @@
 package com.scccy.service.auth.config;
 
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
-import com.scccy.service.auth.fegin.SystemUserClient;
+import com.scccy.service.auth.service.SystemUserCacheService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +26,7 @@ import java.util.List;
 public class TokenCustomizerConfig {
 
     @Resource
-    private SystemUserClient systemUserClient;
+    private SystemUserCacheService systemUserCacheService;
 
     /**
      * JWT Token 自定义器
@@ -58,16 +58,8 @@ public class TokenCustomizerConfig {
 
             log.debug("开始自定义 JWT Token，用户名: {}", username);
 
-            // 从系统服务获取用户信息
-            SysUserMp user = null;
-            try {
-                var result = systemUserClient.getByUserName(username);
-                if (result != null && result.getData() != null) {
-                    user = result.getData();
-                }
-            } catch (Exception e) {
-                log.warn("获取用户信息失败: {}", e.getMessage());
-            }
+            // 从缓存服务获取用户信息（缓存未命中时自动触发 Feign 调用）
+            SysUserMp user = systemUserCacheService.getUserByUserName(username);
 
             // 添加自定义 claims
             if (user != null) {
@@ -95,7 +87,7 @@ public class TokenCustomizerConfig {
             }
 
             // 获取用户权限（暂时返回空列表，后续可以扩展）
-            List<String> authorities = getUserAuthorities(username, user);
+            List<String> authorities = getUserAuthorities(username);
             context.getClaims().claim("authorities", authorities);
             log.debug("添加 authorities: {}", authorities);
 
@@ -115,18 +107,13 @@ public class TokenCustomizerConfig {
      * @param user     用户信息（如果已获取，暂时未使用）
      * @return 权限列表
      */
-    private List<String> getUserAuthorities(String username, SysUserMp user) {
-        try {
-            // 调用 service-system 获取用户权限
-            var result = systemUserClient.getUserAuthorities(username);
-            if (result != null && result.getData() != null) {
-                log.debug("获取用户权限成功: username={}, authorities={}", username, result.getData());
-                return result.getData();
-            }
-        } catch (Exception e) {
-            log.warn("获取用户权限失败: username={}, error={}", username, e.getMessage());
+    private List<String> getUserAuthorities(String username) {
+        List<String> authorities = systemUserCacheService.getUserAuthorities(username);
+        if (authorities == null) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        log.debug("获取用户权限成功: username={}, authorities={}", username, authorities);
+        return authorities;
     }
 }
 
