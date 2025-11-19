@@ -12,6 +12,7 @@
 - **智能 Redis URI**: 自动从环境变量或 Spring Redis 配置获取 Redis 连接信息
 - **高性能**: 本地缓存使用 Caffeine，提供高性能的本地缓存能力
 - **分布式缓存**: 远程缓存使用 Redis，支持分布式环境下的缓存共享
+- **统一序列化**：远程缓存 Value 默认使用 Fastjson2 UTF-8 编解码，保证跨服务通用性
 
 ## 核心组件
 
@@ -120,4 +121,4 @@ jetcache:
 2. **Redis URI**: 如果 Nacos 中已配置完整的 `jetcache.remote.*.uri`，则不会自动构建 URI
 3. **环境变量**: 支持通过环境变量配置 Redis 连接信息，适合容器化部署
 4. **Spring Redis 配置**: 如果项目中已配置 Spring Redis，会自动使用 Spring Redis 的配置构建 JetCache Redis URI
-
+5. **序列化约定**：默认远程缓存 Value 编解码均指向 `com.scccy.common.redis.cache.codec.Fastjson2ValueEncoder/Decoder`，如业务需要可自行覆盖

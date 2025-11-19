@@ -37,6 +37,9 @@ import java.util.Map;
  */
 public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
+    private static final String FASTJSON2_ENCODER = "com.scccy.common.redis.cache.codec.Fastjson2ValueEncoder";
+    private static final String FASTJSON2_DECODER = "com.scccy.common.redis.cache.codec.Fastjson2ValueDecoder";
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         // 检查是否已经在 application.yml 或环境变量中配置了 Redis URI
@@ -88,8 +91,8 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.expireAfterWriteInMillis", "7200000");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueEncoder", "java");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueDecoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueEncoder", FASTJSON2_ENCODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.default.valueDecoder", FASTJSON2_DECODER);
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.default.poolConfig.maxTotal", "50");
@@ -101,8 +104,8 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.expireAfterWriteInMillis", "43200000");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueEncoder", "java");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueDecoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueEncoder", FASTJSON2_ENCODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.valueDecoder", FASTJSON2_DECODER);
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.longTime.poolConfig.maxTotal", "50");
@@ -114,8 +117,8 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.type", "redis.lettuce");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.expireAfterWriteInMillis", "300000");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.keyConvertor", "jackson");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueEncoder", "java");
-        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueDecoder", "java");
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueEncoder", FASTJSON2_ENCODER);
+        setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.valueDecoder", FASTJSON2_DECODER);
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.minIdle", "5");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.maxIdle", "20");
         setIfAbsent(environment, defaultProperties, "jetcache.remote.shortTime.poolConfig.maxTotal", "50");
@@ -170,4 +173,3 @@ public class JetCacheEnvironmentPostProcessor implements EnvironmentPostProcesso
         }
     }
 }
-
