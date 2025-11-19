@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit;
  *     <li>不做本地缓存，统一依赖 Redis 提供跨实例可见性</li>
  *     <li>使用 JetCache 的远程缓存进行读写，可在统计中查看命中率等指标</li>
  *     <li>使用 StringRedisTemplate 获取 TTL（JetCache Cache 接口不提供 getTtl 方法）</li>
+ *     <li>配置说明：区域名称是 "remote_internal_token:"（带冒号），配置键是 "remote_internal_token"（不带冒号）</li>
+ *     <li>使用 fastjson2 作为 keyConvertor，string 作为 valueEncoder/valueDecoder 以确保 UTF-8 编码</li>
  * </ul>
  * </p>
  */

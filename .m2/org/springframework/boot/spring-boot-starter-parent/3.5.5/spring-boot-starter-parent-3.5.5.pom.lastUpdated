@@ -1,0 +1,8 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Wed Nov 19 12:33:13 CST 2025
+1719d32bbcb55c994446b490144e32aa1d3384fc@default-nexus-releases-http\://117.50.185.51\:8881/repository/maven-central/.lastUpdated=1763526793947
+@default-public-https\://maven.youzanyun.com/repository/maven-public/.lastUpdated=1763526793977
+https\://maven.youzanyun.com/repository/maven-public/.error=Could not transfer artifact org.springframework.boot\:spring-boot-starter-parent\:pom\:3.5.5 from/to public (https\://maven.youzanyun.com/repository/maven-public/)\: maven.youzanyun.com\: Temporary failure in name resolution
+https\://maven.aliyun.com/repository/public/.error=Could not transfer artifact org.springframework.boot\:spring-boot-starter-parent\:pom\:3.5.5 from/to aliyunMaven (https\://maven.aliyun.com/repository/public)\: maven.aliyun.com\: Temporary failure in name resolution
+@default-aliyunMaven-https\://maven.aliyun.com/repository/public/.lastUpdated=1763526793982
+http\://117.50.185.51\:8881/repository/maven-central/.error=Could not transfer artifact org.springframework.boot\:spring-boot-starter-parent\:pom\:3.5.5 from/to nexus-releases (http\://117.50.185.51\:8881/repository/maven-central/)\: Operation not permitted

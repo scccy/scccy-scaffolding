@@ -12,17 +12,18 @@ import com.nimbusds.jwt.SignedJWT;
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
 import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.dto.LoginResponse;
-import com.scccy.service.auth.fegin.SystemUserClient;
 import com.scccy.service.auth.oauth2.JWKCacheManager;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.time.Instant;
@@ -51,7 +52,7 @@ import java.util.UUID;
 public class UserTokenGenerationService {
 
     @Autowired
-    private SystemUserClient systemUserClient;
+    private SystemUserCacheService systemUserCacheService;
 
     @Autowired
     private RegisteredClientRepository registeredClientRepository;
@@ -66,12 +67,12 @@ public class UserTokenGenerationService {
     private JWKCacheManager jwkCacheManager;
 
     /**
-     * 默认客户端 ID，用于普通用户 Token 生成
+     * 内部服务客户端 ID，从配置文件读取
      * <p>
-     * 注意：Auth 服务本身就是 Authorization Server，不需要外部配置客户端 ID
-     * 这里使用固定的默认值，或者从 RegisteredClientRepository 获取第一个可用客户端
+     * 默认值为空，如果没有配置则使用默认配置（2 小时过期时间）
      */
-    private static final String DEFAULT_USER_CLIENT_ID = "default_user_client";
+    @Value("${scccy.internal-token.client-id:}")
+    private String internalServiceClientId;
 
     /**
      * 生成用户 JWT Token
@@ -91,20 +92,15 @@ public class UserTokenGenerationService {
         log.info("生成用户 JWT Token: username={}", username);
 
         try {
-            // 1. 获取用户信息
-            ResultData<SysUserMp> userResult = systemUserClient.getByUserName(username);
-            if (userResult == null || userResult.getData() == null) {
+            // 1. 获取用户信息（缓存封装）
+            SysUserMp user = systemUserCacheService.getUserByUserName(username);
+            if (user == null) {
                 log.warn("用户不存在: username={}", username);
                 throw new RuntimeException("用户不存在");
             }
 
-            SysUserMp user = userResult.getData();
-
             // 2. 获取用户权限
-            ResultData<List<String>> authoritiesResult = systemUserClient.getUserAuthorities(username);
-            List<String> authorities = authoritiesResult != null && authoritiesResult.getData() != null
-                    ? authoritiesResult.getData()
-                    : Collections.emptyList();
+            List<String> authorities = systemUserCacheService.getUserAuthorities(username);
 
             // 3. 生成 JWT Token
             String token = generateJwtToken(user, authorities);
@@ -311,27 +307,34 @@ public class UserTokenGenerationService {
     /**
      * 查找用户客户端
      * <p>
-     * 尝试查找用于普通用户的默认客户端，如果不存在则返回 null
+     * 从配置文件中读取内部服务客户端 ID（scccy.internal-token.client-id），
+     * 并在数据库中查找对应的客户端配置。
      * <p>
-     * 注意：Auth 服务本身就是 Authorization Server，不需要外部配置客户端
-     * 这里尝试查找常见的默认客户端 ID
+     * 注意：
+     * 1. 必须从配置文件读取客户端 ID，保证与内部服务调用使用相同的客户端配置
+     * 2. 用户登录后的 Token 会用于 /api/** 路由，这些路由都需要 SCOPE_internal-service 权限
+     * 3. 如果配置了客户端 ID 但数据库中不存在，将抛出异常拒绝登录
+     * 4. 如果未配置客户端 ID，将使用默认配置（2 小时过期时间）
      *
-     * @return 注册的客户端，如果不存在则返回 null
+     * @return 注册的客户端，如果未配置客户端 ID 则返回 null（使用默认配置）
+     * @throws RuntimeException 如果配置了客户端 ID 但数据库中不存在
      */
     private RegisteredClient findUserClient() {
-        // 尝试查找常见的默认客户端 ID（用于普通用户）
-        String[] defaultClientIds = {DEFAULT_USER_CLIENT_ID, "default_user", "test_client1", "default"};
-        
-        for (String clientId : defaultClientIds) {
-            RegisteredClient client = registeredClientRepository.findByClientId(clientId);
+        // 如果配置了内部服务客户端 ID，必须在数据库中找到对应的客户端配置
+        if (StringUtils.hasText(internalServiceClientId)) {
+            RegisteredClient client = registeredClientRepository.findByClientId(internalServiceClientId);
             if (client != null) {
-                log.debug("找到用户客户端: clientId={}", clientId);
+                log.debug("找到用户客户端（从配置读取）: clientId={}", internalServiceClientId);
                 return client;
             }
+            // 配置了客户端 ID 但数据库中不存在，拒绝登录
+            String errorMsg = String.format("配置的内部服务客户端 ID 不存在: %s，请在数据库中创建对应的客户端配置", internalServiceClientId);
+            log.error(errorMsg);
+            throw new RuntimeException(errorMsg);
         }
         
-        // 如果找不到默认客户端，返回 null，使用默认配置
-        log.debug("未找到用户客户端，将使用默认配置");
+        // 如果未配置客户端 ID，使用默认配置（2 小时过期时间）
+        log.debug("未配置内部服务客户端 ID，将使用默认配置（2 小时过期时间）");
         return null;
     }
 }

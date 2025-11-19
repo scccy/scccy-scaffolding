@@ -33,6 +33,9 @@ public class AuthService {
     @Autowired
     private SystemUserClient systemUserClient;
 
+    @Autowired
+    private SystemUserCacheService systemUserCacheService;
+
     @Resource
     private UserTokenGenerationService userTokenGenerationService;
 
@@ -49,15 +52,12 @@ public class AuthService {
     public Authentication authenticate(String userName, String password) {
         log.info("用户登录认证: userName={}", userName);
 
-        // 1. 通过 Feign 调用 service-system 获取用户信息
-        ResultData<SysUserMp> result = systemUserClient.getByUserName(userName);
-        
-        if (result == null || result.getData() == null) {
+        // 1. 从缓存封装获取用户信息（内部仍通过 Feign，如缓存未命中时会远程查询）
+        SysUserMp user = systemUserCacheService.getUserByUserName(userName);
+        if (user == null) {
             log.warn("用户不存在: userName={}", userName);
             throw new BadCredentialsException("用户名或密码错误");
         }
-
-        SysUserMp user = result.getData();
 
         // 2. 验证用户状态
         if (user.getStatus() != null && user.getStatus() != 0) {
