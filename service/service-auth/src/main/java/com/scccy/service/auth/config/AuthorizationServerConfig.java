@@ -165,11 +165,11 @@ public class AuthorizationServerConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         // 用户注册接口公开访问
-                        .requestMatchers("/api/system/user/register").permitAll()
+                        .requestMatchers("/api/user/register").permitAll()
                         // 用户登录接口公开访问
-                        .requestMatchers("/api/system/user/login").permitAll()
+                        .requestMatchers("/api/user/login").permitAll()
                         // 用户登出接口需要认证
-                        .requestMatchers("/api/system/user/logout").authenticated()
+                        .requestMatchers("/api/user/logout").authenticated()
                         // 客户端登出接口需要认证
                         .requestMatchers("/api/client/logout").authenticated()
                         // 其他 /api/** 接口需要认证

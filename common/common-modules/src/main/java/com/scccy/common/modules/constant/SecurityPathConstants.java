@@ -39,6 +39,7 @@ public class SecurityPathConstants {
      *     <li>登录端点</li>
      *     <li>健康检查端点</li>
      *     <li>API 文档相关端点</li>
+     *     <li>用户登录/注册等公开接口</li>
      * </ul>
      * <p>
      * 注意：Spring Security 6.x 路径模式规则：
@@ -50,6 +51,8 @@ public class SecurityPathConstants {
     public static final String[] PUBLIC_ENDPOINTS = {
         "/oauth2/**",
         "/login",
+        "/api/user/login",     // 用户登录接口
+        "/api/user/register",  // 用户注册接口
         "/actuator/**",
         "/doc.html",           // Knife4j 文档页面
         "/swagger-ui/**",      // Swagger UI 资源（包含 /swagger-ui.html）
