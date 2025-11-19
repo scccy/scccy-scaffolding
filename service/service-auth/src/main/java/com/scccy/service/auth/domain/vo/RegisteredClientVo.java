@@ -9,7 +9,6 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
-
 public class RegisteredClientVo  {
     private String id;
     private String clientId;

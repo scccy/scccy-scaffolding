@@ -5,7 +5,7 @@
 server:
   port: 30001
   servlet:
-    context-path: /
+    context-path: /api/system
 
 
 # Spring基础配置

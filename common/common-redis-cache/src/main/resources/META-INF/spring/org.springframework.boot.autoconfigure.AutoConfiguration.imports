@@ -1,1 +1,2 @@
-com.scccy.common.redis.cache.JetCacheConfig
+com.scccy.common.redis.cache.config.RedisCacheAutoConfiguration
+

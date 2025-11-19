@@ -8,6 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * SystemUserClient 降级服务工厂
  * 当 service-system 服务不可用时，返回明确的错误信息
@@ -46,6 +49,14 @@ public class SystemUserClientFallback implements FallbackFactory<SystemUserClien
                         cause != null ? cause.getMessage() : "未知错误", cause);
                 return ResultData.fail("service-system 服务不可用，无法登录: " + 
                         (cause != null ? cause.getMessage() : "服务调用失败"));
+            }
+
+            @Override
+            public ResultData<List<String>> getUserAuthorities(String userName) {
+                log.error("service-system 服务不可用，无法获取用户权限: userName={}, 错误原因: {}", 
+                        userName, cause != null ? cause.getMessage() : "未知错误", cause);
+                // 返回空列表，避免影响 Token 生成
+                return ResultData.ok(Collections.emptyList());
             }
         };
     }

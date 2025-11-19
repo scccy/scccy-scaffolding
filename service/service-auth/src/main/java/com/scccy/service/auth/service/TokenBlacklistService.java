@@ -7,15 +7,23 @@ import com.alicp.jetcache.template.QuickConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Token黑名单服务
+ * Token 黑名单服务
  * <p>
- * 用于管理JWT Token的黑名单，支持将Token加入黑名单和检查Token是否在黑名单中
- * 使用Redis缓存存储黑名单Token，Token过期后自动从黑名单中移除
+ * 用于管理 JWT Token 的黑名单，支持将 Token 加入黑名单和检查 Token 是否在黑名单中
+ * 使用 Redis 缓存存储黑名单 Token，Token 过期后自动从黑名单中移除
+ * <p>
+ * 黑名单 Key 格式：
+ * - 优先使用 jti：`jwt:blacklist:{jti}`
+ * - 如果没有 jti，使用 token 整串：`jwt:blacklist:{token}`
+ * <p>
+ * TTL：Token 剩余有效期（exp - now），单位为毫秒
  *
  * @author scccy
  */
@@ -23,143 +31,168 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TokenBlacklistService {
 
-    /**
-     * Token黑名单缓存前缀
-     */
     private static final String TOKEN_BLACKLIST_PREFIX = "jwt:blacklist:";
 
     @Resource
     private CacheManager cacheManager;
 
-    /**
-     * Token黑名单缓存
-     */
     private Cache<String, Boolean> tokenBlacklistCache;
 
     @PostConstruct
     public void init() {
-        // 初始化Token黑名单缓存
-        // 使用远程缓存（Redis），Token过期后自动从缓存中移除
         QuickConfig qc = QuickConfig.newBuilder("remote_")
-                .cacheType(CacheType.REMOTE)  // 仅使用远程缓存（Redis），不使用本地缓存
-                .syncLocal(false)  // 不需要同步本地缓存
+                .cacheType(CacheType.REMOTE)
+                .syncLocal(false)
                 .build();
         tokenBlacklistCache = cacheManager.getOrCreateCache(qc);
     }
 
     /**
-     * 将Token加入黑名单
+     * 将 JWT Token 加入黑名单
      * <p>
-     * Token会一直保留在黑名单中，直到其自然过期（通过Redis的TTL机制）
-     * 这样即使Token过期后，也不会被重新使用
+     * 优先使用 jti 作为 Key，如果没有 jti，使用 token 整串
+     * TTL 设置为 Token 的剩余有效期（exp - now）
      *
-     * @param token       JWT Token
-     * @param expireTime  Token过期时间（时间戳，毫秒）
+     * @param jwt JWT Token 对象
      */
-    public void addToBlacklist(String token, Long expireTime) {
-        if (token == null || token.trim().isEmpty()) {
-            log.warn("Token为空，无法加入黑名单");
+    public void addToBlacklist(Jwt jwt) {
+        if (jwt == null) {
+            log.warn("JWT Token 为空，无法加入黑名单");
             return;
         }
 
         try {
-            String cacheKey = getCacheKey(token);
-            long currentTime = System.currentTimeMillis();
-
-            // 计算Token剩余有效时间（毫秒）
-            long remainingTime = expireTime - currentTime;
-
-            if (remainingTime <= 0) {
-                // Token已经过期，无需加入黑名单
-                log.debug("Token已过期，无需加入黑名单: token={}", maskToken(token));
+            // 优先使用 jti
+            String jti = jwt.getId();
+            String key = buildBlacklistKey(jti != null && !jti.isBlank() ? jti : jwt.getTokenValue());
+            
+            // 计算剩余有效期
+            Instant expiresAt = jwt.getExpiresAt();
+            if (expiresAt == null) {
+                log.warn("JWT Token 没有过期时间，无法加入黑名单: key={}", maskKey(key));
                 return;
             }
 
-            // 将Token加入黑名单，TTL设置为Token剩余有效时间
-            // 使用put方法的expire参数设置过期时间（毫秒）
-            tokenBlacklistCache.put(cacheKey, true, remainingTime, TimeUnit.MILLISECONDS);
+            long currentTime = System.currentTimeMillis();
+            long expireTime = expiresAt.toEpochMilli();
+            long remainingTime = expireTime - currentTime;
 
-            log.info("Token已加入黑名单: token={}, expireTime={}", maskToken(token), expireTime);
+            if (remainingTime <= 0) {
+                log.debug("JWT Token 已过期，无需加入黑名单: key={}", maskKey(key));
+                return;
+            }
+
+            // 写入黑名单
+            tokenBlacklistCache.put(key, true, remainingTime, TimeUnit.MILLISECONDS);
+            log.info("JWT Token 已加入黑名单: key={}, expireTime={}, remainingTime={}ms", 
+                maskKey(key), expireTime, remainingTime);
         } catch (Exception e) {
-            log.error("将Token加入黑名单失败: token={}, error={}", maskToken(token), e.getMessage(), e);
-            // 不抛出异常，避免影响登出流程
+            log.error("将 JWT Token 加入黑名单失败: error={}", e.getMessage(), e);
         }
     }
 
     /**
-     * 检查Token是否在黑名单中
+     * 将 JWT Token 字符串加入黑名单
+     * <p>
+     * 注意：此方法需要先解析 JWT Token 字符串，建议使用 {@link #addToBlacklist(Jwt)} 方法
      *
-     * @param token JWT Token
-     * @return true-在黑名单中，false-不在黑名单中
+     * @param token JWT Token 字符串
+     * @param expiresAt 过期时间（时间戳，毫秒）
      */
-    public boolean isBlacklisted(String token) {
+    public void addToBlacklist(String token, Long expiresAt) {
         if (token == null || token.trim().isEmpty()) {
+            log.warn("Token 为空，无法加入黑名单");
+            return;
+        }
+
+        try {
+            String key = buildBlacklistKey(token);
+            long currentTime = System.currentTimeMillis();
+            long remainingTime = expiresAt - currentTime;
+
+            if (remainingTime <= 0) {
+                log.debug("Token 已过期，无需加入黑名单: key={}", maskKey(key));
+                return;
+            }
+
+            tokenBlacklistCache.put(key, true, remainingTime, TimeUnit.MILLISECONDS);
+            log.info("Token 已加入黑名单: key={}, expireTime={}, remainingTime={}ms", 
+                maskKey(key), expiresAt, remainingTime);
+        } catch (Exception e) {
+            log.error("将 Token 加入黑名单失败: error={}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 检查 JWT Token 是否在黑名单中
+     *
+     * @param jwt JWT Token 对象
+     * @return true 如果在黑名单中，false 如果不在
+     */
+    public boolean isBlacklisted(Jwt jwt) {
+        if (jwt == null) {
             return false;
         }
 
         try {
-            String cacheKey = getCacheKey(token);
-            Boolean blacklisted = tokenBlacklistCache.get(cacheKey);
+            // 优先使用 jti
+            String jti = jwt.getId();
+            String key = buildBlacklistKey(jti != null && !jti.isBlank() ? jti : jwt.getTokenValue());
+            Boolean blacklisted = tokenBlacklistCache.get(key);
             return blacklisted != null && blacklisted;
         } catch (Exception e) {
-            log.error("检查Token黑名单失败: token={}, error={}", maskToken(token), e.getMessage(), e);
-            // 发生异常时，为了安全起见，返回true（认为Token在黑名单中）
-            // 这样可以防止在Redis故障时，已登出的Token被继续使用
+            log.error("检查 JWT Token 黑名单失败: error={}", e.getMessage(), e);
+            // 发生异常时，为了安全起见，返回 true（拒绝访问）
             return true;
         }
     }
 
     /**
-     * 从黑名单中移除Token（可选功能）
-     * <p>
-     * 通常不需要手动移除，因为Token过期后会自动从缓存中移除
-     * 但在某些特殊场景下（如管理员撤销黑名单），可能需要此功能
+     * 检查 Token 是否在黑名单中
      *
-     * @param token JWT Token
+     * @param tokenOrJti Token 字符串或 jti
+     * @return true 如果在黑名单中，false 如果不在
      */
-    public void removeFromBlacklist(String token) {
-        if (token == null || token.trim().isEmpty()) {
-            return;
+    public boolean isBlacklisted(String tokenOrJti) {
+        if (tokenOrJti == null || tokenOrJti.trim().isEmpty()) {
+            return false;
         }
 
         try {
-            String cacheKey = getCacheKey(token);
-            tokenBlacklistCache.remove(cacheKey);
-            log.info("Token已从黑名单中移除: token={}", maskToken(token));
+            String key = buildBlacklistKey(tokenOrJti);
+            Boolean blacklisted = tokenBlacklistCache.get(key);
+            return blacklisted != null && blacklisted;
         } catch (Exception e) {
-            log.error("从黑名单中移除Token失败: token={}, error={}", maskToken(token), e.getMessage(), e);
+            log.error("检查 Token 黑名单失败: error={}", e.getMessage(), e);
+            // 发生异常时，为了安全起见，返回 true（拒绝访问）
+            return true;
         }
     }
 
     /**
-     * 获取缓存Key
+     * 构建黑名单 Key
      *
-     * @param token JWT Token
-     * @return 缓存Key
+     * @param id jti 或 token 整串
+     * @return 黑名单 Key
      */
-    private String getCacheKey(String token) {
-        // 为了安全，使用Token的哈希值作为缓存Key的一部分
-        // 这样即使Token泄露，也不会在Redis中暴露完整的Token
-        // 直接使用完整Token作为Key，因为我们需要精确匹配
-        return TOKEN_BLACKLIST_PREFIX + token;
+    private String buildBlacklistKey(String id) {
+        return TOKEN_BLACKLIST_PREFIX + id;
     }
 
     /**
-     * 掩码Token（用于日志输出）
-     * <p>
-     * 只显示Token的前8位和后8位，中间用*代替，保护敏感信息
+     * 掩码 Key（用于日志输出，保护敏感信息）
      *
-     * @param token JWT Token
-     * @return 掩码后的Token
+     * @param key 原始 Key
+     * @return 掩码后的 Key
      */
-    private String maskToken(String token) {
-        if (token == null || token.length() <= 16) {
+    private String maskKey(String key) {
+        if (key == null || key.length() <= 32) {
             return "***";
         }
-        int prefixLength = 8;
+        int prefixLength = 16;
         int suffixLength = 8;
-        String prefix = token.substring(0, prefixLength);
-        String suffix = token.substring(token.length() - suffixLength);
+        String prefix = key.substring(0, prefixLength);
+        String suffix = key.substring(key.length() - suffixLength);
         return prefix + "..." + suffix;
     }
 }

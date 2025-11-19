@@ -8,6 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import java.lang.annotation.*;
 
@@ -24,6 +25,7 @@ import java.lang.annotation.*;
  *     <li>@EnableJpaRepositories</li>
  *     <li>@EntityScan</li>
  *     <li>@EnableFeignClients</li>
+ *     <li>@EnableMethodSecurity</li>
  * </ul>
  * <p>
  * 使用方式：
@@ -64,6 +66,7 @@ import java.lang.annotation.*;
 @EnableAsync
 @MapperScan("com.scccy.service.**.dao.mapper")
 @EnableFeignClients(basePackages = "com.scccy.service")
+@EnableMethodSecurity
 @Import(ScccyServiceApplicationRegistrar.class)
 public @interface ScccyServiceApplication {
 }

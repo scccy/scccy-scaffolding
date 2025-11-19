@@ -1,6 +1,36 @@
 
 # Spring Cloud Gateway配置
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:XdiwWEW15e}
+      database: ${REDIS_DATABASE:0}
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
+  security:
+    jwt:
+      blacklist:
+        # 黑名单键前缀
+        prefix: "jwt:blacklist:"
+        # 是否跳过 client_credentials（机器到机器）令牌的黑名单校验
+        skip-client-credentials: true
+        # 按路径前缀跳过（逗号分隔），例如内部健康检查、内部回调
+        skip-path-prefixes: /actuator/,/internal/
+    oauth2:
+      resourceserver:
+              jwt:
+                issuer-uri: http://service-auth:30003  # Authorization Server 地址（使用服务名，适用于微服务环境）
+                # 或显式配置 JWK Set URI
+                # jwk-set-uri: http://service-auth:30003/oauth2/jwks
+  # OAuth2 Resource Server 配置
+
+
   cloud:
     gateway:
       server:
@@ -19,12 +49,27 @@ spring:
 
       # 路由配置
           routes:
+            - id: 认证服务
+              uri: lb://service-auth
+              predicates:
+                - Path=/api/user/**,/oauth2/**
+              filters:
+                - name: UserInfoGatewayFilter  # 应用用户信息过滤器
             - id: 系统服务
               uri: lb://service-demo
               predicates:
                 - Path=/demo/**
               filters:
                 - StripPrefix=1
+                - name: UserInfoGatewayFilter  # 应用用户信息过滤器
+            # 示例：其他服务路由也可以应用用户信息过滤器
+            # - id: service-system
+            #   uri: lb://service-system
+            #   predicates:
+            #     - Path=/system/**
+            #   filters:
+            #     - StripPrefix=1
+            #     - name: UserInfoGatewayFilter
 
 
 

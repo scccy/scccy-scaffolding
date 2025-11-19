@@ -1,10 +1,17 @@
 # 认证服务 - Nacos远程配置文件
-# 配置ID: service-auth.yaml
+# 配置ID: service-demo.yaml
 # 配置组: DEFAULT_GROUP
 # 命名空间: ba1493dc-20fa-413b-84e1-d929c9a4aeac
 
-# 数据源配置
+# OAuth2 Resource Server 配置
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://service-auth:30003  # Authorization Server 地址（使用服务名，适用于微服务环境）
+
+  # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${MYSQL_URL:jdbc:mysql://117.50.197.170:3306/scaffolding?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8}

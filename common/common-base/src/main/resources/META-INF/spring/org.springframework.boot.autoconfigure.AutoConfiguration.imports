@@ -3,8 +3,11 @@ com.scccy.common.base.config.DataSourceConfig
 com.scccy.common.base.config.TransactionConfig
 com.scccy.common.base.config.WebMvcConfig
 com.scccy.common.base.config.OpenFeignConfig
-com.scccy.common.base.config.RedisConfig
 com.scccy.common.base.config.OkHttpConfig
 com.scccy.common.base.config.PasswordEncoderConfig
+com.scccy.common.base.config.PermitAllUrlProperties
+com.scccy.common.base.config.ResourceServerConfig
 com.scccy.common.base.exception.GlobalExceptionHandler
 com.scccy.common.base.manager.OkHttpManager
+com.scccy.common.base.service.PermissionService
+com.scccy.common.base.config.DevPermitAllSecurityConfig

@@ -1,10 +1,12 @@
 package com.scccy.service.auth.domain.mp;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.scccy.common.modules.domain.BaseEntity;
+import com.scccy.service.auth.domain.vo.RegisteredClientVo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,14 +24,11 @@ import java.util.Map;
  * @since 2025-11-01 14:03:12
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
 @TableName("oauth2_registered_client")
 @Schema(name = "Oauth2RegisteredClientMp", description = "client记录表")
-public class Oauth2RegisteredClientMp extends Model<Oauth2RegisteredClientMp> implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 512217806214493472L;
-
+public class Oauth2RegisteredClientMp extends BaseEntity<Oauth2RegisteredClientMp, RegisteredClientVo> {
     /**
      * UUID生成
      */
@@ -121,40 +120,6 @@ public class Oauth2RegisteredClientMp extends Model<Oauth2RegisteredClientMp> im
     @TableField(value = "token_settings",typeHandler = JacksonTypeHandler.class)
     private Map<String, Object> tokenSettings;
 
-    /**
-     * 是否已删除Y：已删除，N：未删除
-     */
-    @Schema(description = "是否已删除Y：已删除，N：未删除")
-    @TableField("del_flag")
-    private String delFlag;
-
-    /**
-     * 创建时间
-     */
-    @Schema(description = "创建时间")
-    @TableField("created_time")
-    private Date createdTime;
-
-    /**
-     * 更新时间
-     */
-    @Schema(description = "更新时间")
-    @TableField("updated_time")
-    private Date updatedTime;
-
-    /**
-     * 创建人
-     */
-    @Schema(description = "创建人")
-    @TableField("created_by")
-    private String createdBy;
-
-    /**
-     * 更新人
-     */
-    @Schema(description = "更新人")
-    @TableField("updated_by")
-    private String updatedBy;
 
 
 }

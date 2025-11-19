@@ -30,19 +30,16 @@ public class Oauth2FailureHandler implements AuthenticationFailureHandler {
             throws IOException {
         log.warn("authentication error:", exception);
         String message;
-        if (exception instanceof OAuth2AuthenticationException auth2AuthenticationException) {
-            OAuth2Error error = auth2AuthenticationException.getError();
-            message = "认证信息错误: " + error.getErrorCode() + ", " + error.getDescription();
-        } else if (exception instanceof BadCredentialsException) {
-            message = "账户或密码错误!";
-        } else if (exception instanceof LockedException) {
-            message = "账户被锁定，请联系管理员!";
-        } else if (exception instanceof AccountExpiredException) {
-            message = "账户过期，请联系管理员!";
-        } else if (exception instanceof DisabledException) {
-            message = "账户被禁用，请联系管理员!";
-        } else {
-            message = exception.getMessage();
+        switch (exception) {
+            case OAuth2AuthenticationException auth2AuthenticationException -> {
+                OAuth2Error error = auth2AuthenticationException.getError();
+                message = "认证信息错误: " + error.getErrorCode() + ", " + error.getDescription();
+            }
+            case BadCredentialsException badCredentialsException -> message = "账户或密码错误!";
+            case LockedException lockedException -> message = "账户被锁定，请联系管理员!";
+            case AccountExpiredException accountExpiredException -> message = "账户过期，请联系管理员!";
+            case DisabledException disabledException -> message = "账户被禁用，请联系管理员!";
+            default -> message = exception.getMessage();
         }
 
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

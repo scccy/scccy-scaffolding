@@ -19,32 +19,23 @@ public class AesException extends Exception {
 	private int code;
 
 	private static String getMessage(int code) {
-		switch (code) {
-		case ValidateSignatureError:
-			return "签名验证错误";
-		case ParseXmlError:
-			return "xml解析失败";
-		case ComputeSignatureError:
-			return "sha加密生成签名失败";
-		case IllegalAesKey:
-			return "SymmetricKey非法";
-		case ValidateCorpidError:
-			return "corpid校验失败";
-		case EncryptAESError:
-			return "aes加密失败";
-		case DecryptAESError:
-			return "aes解密失败";
-		case IllegalBuffer:
-			return "解密后得到的buffer非法";
+        return switch (code) {
+            case ValidateSignatureError -> "签名验证错误";
+            case ParseXmlError -> "xml解析失败";
+            case ComputeSignatureError -> "sha加密生成签名失败";
+            case IllegalAesKey -> "SymmetricKey非法";
+            case ValidateCorpidError -> "corpid校验失败";
+            case EncryptAESError -> "aes加密失败";
+            case DecryptAESError -> "aes解密失败";
+            case IllegalBuffer -> "解密后得到的buffer非法";
 //		case EncodeBase64Error:
 //			return "base64加密错误";
 //		case DecodeBase64Error:
 //			return "base64解密错误";
 //		case GenReturnXmlError:
 //			return "xml生成失败";
-		default:
-			return null; // cannot be
-		}
+            default -> null; // cannot be
+        };
 	}
 
 	public int getCode() {
