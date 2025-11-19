@@ -43,7 +43,7 @@ public class InternalTokenProperties {
      * 默认: internal-service
      */
     private String scope = "internal-service";
-
+    
     /**
      * Token audience，针对特定目标服务可选配置
      */

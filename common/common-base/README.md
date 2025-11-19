@@ -51,14 +51,14 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
   - `scccy.internal-token.refresh-ahead-seconds`: `60`（提前1分钟刷新）
 
 - **使用方式**：
-```java
-@Resource
+  ```java
+  @Resource
 private AuthTokenService authTokenService;
-
-public void someMethod() {
+  
+  public void someMethod() {
     String token = authTokenService.getServiceToken();  // 自动获取并缓存token
-}
-```
+  }
+  ```
 
 - **配置覆盖优先级**（从高到低）：
   1. Nacos 配置中心配置

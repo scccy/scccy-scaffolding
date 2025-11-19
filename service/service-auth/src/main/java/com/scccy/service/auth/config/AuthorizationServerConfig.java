@@ -168,12 +168,10 @@ public class AuthorizationServerConfig {
                         .requestMatchers("/api/user/register").permitAll()
                         // 用户登录接口公开访问
                         .requestMatchers("/api/user/login").permitAll()
-                        // 用户登出接口需要认证
-                        .requestMatchers("/api/user/logout").authenticated()
-                        // 客户端登出接口需要认证
-                        .requestMatchers("/api/client/logout").authenticated()
-                        // 其他 /api/** 接口需要认证
-                        .requestMatchers("/api/**").authenticated()
+                        // 用户登出接口公开访问（登出不需要验证 token，即使 token 无效也应允许加入黑名单）
+                        .requestMatchers("/api/user/logout").permitAll()
+                        // 其他所有 /api/** 接口都需要内部服务 scope（仅服务间 Feign 调用）
+                        .requestMatchers("/api/**").hasAuthority("SCOPE_internal-service")
                         // 其他请求需要认证
                         .anyRequest().authenticated()
                 )
