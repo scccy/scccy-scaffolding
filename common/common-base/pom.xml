@@ -70,12 +70,6 @@
             <artifactId>mybatis-plus-extension</artifactId>
         </dependency>
 
-        <!-- Redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
         <!-- service-common - 通用工具模块 -->
         <dependency>
             <groupId>com.scccy</groupId>

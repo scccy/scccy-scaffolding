@@ -15,7 +15,7 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - **HTTP 客户端**: 集成 OkHttp3，提供 HTTP 请求能力
 - **OpenFeign 配置**: 提供微服务间调用的 Feign 客户端配置
 - **权限服务**: 提供统一的权限验证接口
-- **内部令牌管理**: 自动管理服务间调用的 OAuth2 内部令牌，支持缓存和自动刷新
+- **内部令牌管理**: 通过 `AuthTokenService` 自动管理服务间调用的 OAuth2 内部令牌，支持 Redis 缓存与自动刷新
 
 ## 核心组件
 
@@ -24,12 +24,12 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 - `ResourceServerConfig`: OAuth2 资源服务器配置
 - `WebMvcConfig`: Web MVC 全局配置
 - `MyBatisPlusConfig`: MyBatis Plus 配置
-- `RedisConfig`: Redis 连接配置
 - `OkHttpConfig`: OkHttp3 客户端配置
 - `OpenFeignConfig`: OpenFeign 客户端配置
 - `PasswordEncoderConfig`: 密码编码器配置
 - `DataSourceConfig`: 数据源配置
 - `TransactionConfig`: 事务配置
+- RedisTemplate 配置由 `common-redis-cache` 模块提供的 `RedisCacheAutoConfiguration` 自动注入
 
 ### 安全配置开关
 
@@ -45,20 +45,20 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
   - `scccy.internal-token.enabled`: `true`（默认启用）
   - `scccy.internal-token.client-id`: `internal-service-client`
   - `scccy.internal-token.client-secret`: `InternalSecret123!`
-  - `scccy.internal-token.token-url`: `http://service-auth:30002/oauth2/token`
+- `scccy.internal-token.token-url`: `lb://service-auth/oauth2/token`
   - `scccy.internal-token.scope`: `internal-service`
   - `scccy.internal-token.cache-expire-seconds`: `540`（9分钟，略小于token有效期）
   - `scccy.internal-token.refresh-ahead-seconds`: `60`（提前1分钟刷新）
 
 - **使用方式**：
-  ```java
-  @Resource
-  private InternalTokenManager tokenManager;
-  
-  public void someMethod() {
-      String token = tokenManager.getToken();  // 自动获取并缓存token
-  }
-  ```
+```java
+@Resource
+private AuthTokenService authTokenService;
+
+public void someMethod() {
+    String token = authTokenService.getServiceToken();  // 自动获取并缓存token
+}
+```
 
 - **配置覆盖优先级**（从高到低）：
   1. Nacos 配置中心配置
@@ -67,8 +67,10 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
   4. 默认配置（最低优先级）
 
 - **特性**：
-  - 自动缓存：使用 JetCache 两级缓存（本地 + Redis），避免频繁请求
-  - 自动刷新：token 过期前自动刷新，不阻塞请求
+  - 统一缓存：借助 `InternalTokenCache`（Redis）在多实例间共享 token，并可控制 TTL
+  - 自动刷新：在距离过期 `refresh-ahead-seconds` 内自动刷新，避免抖动
+  - 拦截注入：`FeignAuthRequestInterceptor` 自动在 Feign 请求头写入 `Authorization`
+  - Redis 自动装配：引入 `common-redis-cache` 即可获得 `RedisTemplate`、`StringRedisTemplate` 与 JetCache 默认配置
   - 异常处理：完善的错误处理和日志记录
 
 ### 注解
@@ -78,10 +80,10 @@ Spring 基础配置模块，提供 Spring Boot 应用的基础配置和依赖管
 ### 服务接口
 
 - `PermissionService`: 权限验证服务接口
+- `AuthTokenService`: 内部服务令牌服务，负责获取、缓存并刷新 OAuth2 access token
 
 ### 管理器
 
-- `InternalTokenManager`: 内部服务令牌管理器，负责获取和缓存 OAuth2 access token
 - `OkHttpManager`: OkHttp3 HTTP 客户端管理器
 
 ### 工具类

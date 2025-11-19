@@ -37,8 +37,8 @@
 ## 3. 内部服务/普通用户行为
 
 1. **内部令牌获取**  
-   - `InternalTokenManager`（`common-base`）在启动时根据 `scccy.internal-token.*` 配置自动启用。  
-   - Feign 默认注入 `InternalTokenFeignRequestInterceptor`，对所有未跳过的 FeignClient 添加 `Authorization: Bearer <internal token>`。  
+   - `AuthTokenService`（`common-base`）在启动时根据 `scccy.internal-token.*` 配置自动启用，并通过 Redis 共享 token。  
+   - Feign 默认注入 `FeignAuthRequestInterceptor`，对所有未跳过的 FeignClient 添加 `Authorization: Bearer <internal token>`。  
    - 令牌来自 `client_credentials` 模式，默认客户端 `internal-service-client`，scope `internal-service`。  
    - `scccy.internal-token.token-url` 建议使用 `lb://service-auth/oauth2/token`（或其他服务名）形式，依赖 LoadBalanced WebClient 自动发现实例，无需硬编码主机端口。
 
@@ -59,7 +59,7 @@
 | --- | --- | --- | --- |
 | `@Anonymous` (`common-modules`) | Controller 或方法 | 将接口加入匿名放行列表，由 `PermitAllUrlProperties` 自动收集，Resource Server/Gateway 放行 | `PermitAllUrlProperties`, `ResourceServerConfig` |
 | `@InternalOnly(scope = "internal-service")` (`common-modules`) | Controller 或方法 | 声明内部专用接口，要求请求携带 `SCOPE_internal-service` 等内部令牌 | `InternalOnlyUrlProperties`, `ResourceServerConfig` |
-| `@SkipInternalToken` (`common-base`) | FeignClient 接口 | 禁止该 FeignClient 注入内部令牌，适用于对外调用 | `InternalTokenFeignRequestInterceptor` |
+| `@SkipInternalToken` (`common-base`) | FeignClient 接口 | 禁止该 FeignClient 注入内部令牌，适用于对外调用 | `FeignAuthRequestInterceptor` |
 | `@CurrentUser` (`common-modules`) | Controller 参数 | 自动从请求头注入用户信息（X-User-*），便于业务层消费 | `CurrentUserArgumentResolver` |
 
 > 说明：`@InternalOnly` 与 `@Anonymous` 可叠加在不同方法上；方法级声明优先级高于类级。若同一个 Controller 既有对外接口又有内部接口，可在方法层面分别标注。
@@ -78,7 +78,7 @@
    - FeignClient 默认获取内部 token，无需业务代码处理；如需自定义 scope，可在 `@InternalOnly(scope = "xxx")` 与 Feign 客户端中同步配置。
 
 3. **运维关注点**
-   - 定期轮换内部客户端密钥（`internal-service-client`），确保 `InternalTokenManager` 配置同步。  
+   - 定期轮换内部客户端密钥（`internal-service-client`），确保 `AuthTokenService` 配置同步。  
    - 监控 Gateway 黑名单命中、内部 token 获取失败等日志，及时发现异常。
 
 ---

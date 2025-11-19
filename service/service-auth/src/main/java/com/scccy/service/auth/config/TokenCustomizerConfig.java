@@ -39,6 +39,21 @@ public class TokenCustomizerConfig {
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
         return (context) -> {
             Authentication principal = context.getPrincipal();
+
+            // 客户端凭证模式：内部服务调用，优先处理并返回
+            if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
+                String clientId = context.getRegisteredClient().getClientId();
+                log.debug("客户端凭证模式自定义 JWT Token，clientId: {}", clientId);
+
+                // 为内部服务调用添加基础标识，后续 Resource Server 可基于此区分
+                context.getClaims().claim("client_id", clientId);
+                context.getClaims().claim("token_type", "internal-service");
+
+                // 根据授权范围写入 scope 信息（Spring Authorization Server 默认会处理 scope，
+                // 这里可以按需追加内部标记或审计字段）
+                return;
+            }
+
             String username = principal.getName();
 
             log.debug("开始自定义 JWT Token，用户名: {}", username);
@@ -84,11 +99,6 @@ public class TokenCustomizerConfig {
             context.getClaims().claim("authorities", authorities);
             log.debug("添加 authorities: {}", authorities);
 
-            // 对于客户端凭证模式，可能需要特殊处理
-            if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
-                log.debug("客户端凭证模式，不添加用户信息");
-                // 客户端凭证模式通常不包含用户信息
-            }
         };
     }
 

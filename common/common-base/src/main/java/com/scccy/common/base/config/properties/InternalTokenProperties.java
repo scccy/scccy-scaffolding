@@ -43,6 +43,16 @@ public class InternalTokenProperties {
      * 默认: internal-service
      */
     private String scope = "internal-service";
+
+    /**
+     * Token audience，针对特定目标服务可选配置
+     */
+    private String audience;
+
+    /**
+     * OAuth2 授权模式，默认为 client_credentials
+     */
+    private String grantType = "client_credentials";
     
     /**
      * Token 缓存过期时间（秒），应该略小于真实 token 有效期

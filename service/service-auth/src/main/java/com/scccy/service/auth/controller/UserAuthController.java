@@ -74,6 +74,7 @@ public class UserAuthController {
                     content = @Content(schema = @Schema(implementation = ResultData.class))
             )
     })
+    @Anonymous
     @PostMapping("/register")
     @ResponseBody
     public ResultData<LoginResponse> register(@Valid @RequestBody RegisterBody registerBody) {
@@ -109,6 +110,7 @@ public class UserAuthController {
                     content = @Content(schema = @Schema(implementation = ResultData.class))
             )
     })
+    @Anonymous
     @PostMapping("/login")
     @ResponseBody
     public ResultData<LoginResponse> login(@Valid @RequestBody LoginBody loginBody) {
