@@ -1,0 +1,24 @@
+version: "3.1"
+
+services:
+  seata-server:
+    image: apache/seata-server:2.5.0
+    container_name: seata-server
+    hostname: seata-server
+    restart: unless-stopped
+    ports:
+      - "7091:7091"
+      - "8091:8091"
+    environment:
+      - STORE_MODE=db
+      - SEATA_PORT=8091
+      - SEATA_IP=10.60.224.117   # hostname -I | awk '{for(i=1;i<=NF;i++){if($i!~/^127\./){print $i;exit}}}'
+    volumes:
+      - "/usr/share/zoneinfo/Asia/Shanghai:/etc/localtime"
+      - "/usr/share/zoneinfo/Asia/Shanghai:/etc/timezone"
+      - "./seata-server/resources:/seata-server/resources"
+      - "./seata-server/logs:/root/logs/seata"
+      - "./seata-server/jdbc:/lib/jdbc"
+
+   
+
