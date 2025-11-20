@@ -43,6 +43,7 @@
         <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
         <knife4j.version>4.6.0</knife4j.version>
         <minio.version>8.5.17</minio.version>
+        <seata.version>2.5.0</seata.version>
 
         <fastjson2.version>2.0.57</fastjson2.version>
         <lombok.version>1.18.32</lombok.version>

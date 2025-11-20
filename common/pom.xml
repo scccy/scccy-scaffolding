@@ -20,6 +20,7 @@
         <module>common-knife4j</module>
         <module>common-wechatwork</module>
         <module>common-redis-cache</module>
+        <module>common-seata</module>
 
     </modules>
     <properties>

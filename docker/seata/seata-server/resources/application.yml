@@ -1,0 +1,80 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+server:
+  port: 7091
+
+spring:
+  application:
+    name: seata-server
+  main:
+    web-application-type: none
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    path: ${log.home:${user.home}/logs/seata}
+  extend:
+    logstash-appender:
+      enabled: false
+      destination: 127.0.0.1:4560
+    kafka-appender:
+      enabled: false
+      bootstrap-servers: 127.0.0.1:9092
+      topic: logback_to_logstash
+      producer:
+        acks: 0
+        linger-ms: 1000
+        max-block-ms: 0
+    metric-appender:
+      enabled: false
+
+console:
+  enabled: true
+  user:
+    enabled: true
+    username: seata
+    password: seata
+  ui:
+    default-timezone: Asia/Shanghai
+    default-language: zh-CN
+
+seata:
+  config:
+    type: nacos
+    nacos:
+      server-addr: 117.50.197.170:8848
+      group: DEFAULT_GROUP
+      namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+      username: nacos
+      password: IruggNHvNr
+      data-id: seataServer
+
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 117.50.197.170:8848
+      group: DEFAULT_GROUP
+      namespace: 2b4020b6-cb4a-45c1-ab5c-0169670fb99c
+      username: nacos
+      password: IruggNHvNr
+
+security:
+    secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+    tokenValidityInMilliseconds: 1800000
+    ignore:
+      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.ico,/console-fe/public/**,/api/v1/auth/login
