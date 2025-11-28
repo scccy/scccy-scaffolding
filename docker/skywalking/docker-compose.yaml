@@ -1,25 +1,65 @@
 services:
-  zipkin:
-    image: openzipkin/zipkin:3
-    container_name: zipkin
-    ports:
-      - "9411:9411"
-    environment:
-      - STORAGE_TYPE=mysql
-      - MYSQL_HOST=117.50.197.170
-      - MYSQL_TCP_PORT=3306
-      - MYSQL_USER=zipkin
-      - MYSQL_PASS=XdiwWEW15e
-      - MYSQL_DB=zipkin
-      - MYSQL_USE_SSL=false
-    restart: unless-stopped
+  banyandb:
+    image: ${BANYANDB_IMAGE:-apache/skywalking-banyandb:0.8.0}
+    container_name: banyandb
     networks:
-      - skywalkingNet
+      - demo
+    expose:
+      - 17912
+    ports:
+      - "17913:17913"
+    command: standalone --stream-root-path /tmp/stream-data --measure-root-path /tmp/measure-data --observability-modes=native
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9411/health"]
+      test: [ "CMD", "sh", "-c", "nc -nz 127.0.0.1 17912" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    volumes:
+      - ./logs/banyandb:/var/log/banyandb
+      - ./banyandb-data/stream-data:/var/lib/banyandb/stream-data
+      - ./banyandb-data/measure-data:/var/lib/banyandb/measure-data
+
+  oap:
+    image: ${OAP_IMAGE:-apache/skywalking-oap-server:10.2.0-java21}
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    networks:
+      - demo
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost:12800/healthcheck" ]
+      interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
+      start_period: 10s
+    container_name: oap
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    environment:
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      SW_HEALTH_CHECKER: default
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms2048m -Xmx2048m"
+
+
+  ui:
+    image: ${UI_IMAGE:-apache/skywalking-ui:10.2.0-java21}
+    container_name: ui
+    ports:
+      - "29999:8080"
+    networks:
+      - demo
+    depends_on:
+      oap:
+        condition: service_healthy
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+      SW_OAP_HEALTH_CHECK_URL: http://oap:12800/healthcheck
+      SW_ZIPKIN_ADDRESS: http://oap:9412
+      TZ: Asia/Shanghai
+
 
 networks:
-  skywalkingNet:
-    driver: bridge
+  demo:

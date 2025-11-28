@@ -42,9 +42,7 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
         <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
         <knife4j.version>4.6.0</knife4j.version>
-        <minio.version>8.5.17</minio.version>
         <seata.version>2.5.0</seata.version>
-
         <fastjson2.version>2.0.57</fastjson2.version>
         <lombok.version>1.18.32</lombok.version>
         <jwt.version>0.12.5</jwt.version>
@@ -262,17 +260,6 @@
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>logging-interceptor</artifactId>
                 <version>${okhttp.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.seata</groupId>
-                <artifactId>seata-all</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.seata</groupId>
-                <artifactId>seata-spring-boot-starter</artifactId>
-                <version>${seata.version}</version>
             </dependency>
 
             <!-- 测试相关依赖 -->

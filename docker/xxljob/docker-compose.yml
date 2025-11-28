@@ -1,0 +1,14 @@
+services:
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.2
+    ports:
+      - "29998:8080"
+    environment:
+      # 推荐写成数组形式，更清晰
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=XdiwWEW15e
+      - XXL_JOB_ACCESS_TOKEN=xxx_job
+      - XXL_JOB_I18N=zh_CN
+    volumes:
+      - ./logs:/data/applogs
