@@ -1,93 +1,136 @@
-# service-gateway
+# Gateway 网关服务
 
+## 概述
 
+基于 Spring Cloud Gateway 的 API 网关服务，提供统一的路由、认证、限流等网关功能。作为系统的统一入口，负责请求路由、Token 验证、用户信息传递等核心功能。
 
-## Getting started
+## 主要功能
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **统一路由**: 基于 Spring Cloud Gateway 的响应式路由功能
+- **OAuth2 认证**: 作为 OAuth2 Resource Server，统一验证 JWT Token
+- **用户信息传递**: 从 Token 中提取用户信息，通过请求头传递给后端服务
+- **服务发现**: 集成 Nacos 服务发现，自动路由到注册的微服务
+- **负载均衡**: 使用 Spring Cloud LoadBalancer 进行服务负载均衡
+- **API 文档聚合**: 集成 Knife4j Gateway，聚合各微服务的 API 文档
+- **统一错误响应**: 提供统一的 JSON 格式错误响应
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 核心组件
 
-## Add your files
+### 配置类
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- `ResourceServerConfig`: OAuth2 Resource Server 配置，使用 WebFlux 安全配置
+- `JsonServerAuthenticationEntryPoint`: 统一 JSON 格式认证错误响应
 
-```
-cd existing_repo
-git remote add origin http://117.50.221.113:8077/banyu/service-gateway.git
-git branch -M master
-git push -uf origin master
-```
+### 过滤器
 
-## Integrate with your tools
+- `UserInfoGatewayFilter`: 用户信息网关过滤器，从 Token 提取用户信息并添加到请求头
 
-- [ ] [Set up project integrations](http://117.50.221.113:8077/banyu/service-gateway/-/settings/integrations)
+### 启动类
 
-## Collaborate with your team
+- `GatewayApplication`: 网关服务启动类
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## 技术架构
 
-## Test and Deploy
+### 响应式编程
 
-Use the built-in continuous integration in GitLab.
+Gateway 基于 Spring WebFlux（响应式编程模型），使用 Reactor 框架，提供高性能的非阻塞 I/O 处理能力。
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 安全认证流程
 
-***
+1. 客户端请求携带 JWT Token（Authorization Header）
+2. Gateway 验证 Token 的有效性（通过 JWK Set）
+3. 从 Token 中提取用户信息（userId、username、authorities）
+4. 将用户信息添加到请求头，传递给后端服务
+5. 后端服务从请求头获取用户信息，无需再次解析 Token
 
-# Editing this README
+### 路由配置
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+路由配置通过 Nacos 配置中心管理，支持动态更新路由规则，无需重启服务。
 
-## Suggestions for a good README
+## 配置说明
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### 基础配置
 
-## Name
-Choose a self-explaining name for your project.
+- **端口**: 默认 30000
+- **服务名**: gateway
+- **配置中心**: Nacos
+- **服务注册**: Nacos Discovery
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### OAuth2 配置
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- **Issuer URI**: OAuth2 授权服务器的地址
+- **JWK Set URI**: 用于验证 Token 的公钥端点
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### 公开端点
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+以下端点无需认证即可访问：
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- OAuth2 相关端点（`/oauth2/**`）
+- 登录端点（`/login`）
+- 健康检查（`/actuator/health`）
+- API 文档（`/doc.html`、`/v3/api-docs/**`）
+- 包含 `/public` 的路径
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### 用户信息请求头
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Gateway 会将以下用户信息添加到请求头，传递给后端服务：
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- `X-User-Id`: 用户ID
+- `X-Username`: 用户名
+- `X-Authorities`: 用户权限（逗号分隔）
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## 依赖说明
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### 核心依赖
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+- Spring Cloud Gateway: 网关核心框架
+- Spring Security OAuth2 Resource Server: OAuth2 认证支持
+- Nacos Discovery: 服务发现
+- Nacos Config: 配置中心
+- Spring Cloud LoadBalancer: 负载均衡
+- Knife4j Gateway: API 文档聚合
 
-## License
-For open source projects, say how it is licensed.
+### Common 模块依赖
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- `common-log`: 日志和链路追踪
+- `common-modules`: 通用工具类（JwtUtils 等）
+
+## 使用方式
+
+### 启动服务
+
+启动 Gateway 服务后，所有微服务的请求都通过 Gateway 进行路由。
+
+### 路由规则
+
+路由规则在 Nacos 配置中心的 `gateway.yaml` 中配置，支持：
+
+- 路径匹配
+- 服务发现路由
+- 负载均衡
+- 重试机制
+
+### API 文档访问
+
+启动 Gateway 后，访问 `/doc.html` 可以查看聚合的 API 文档。
+
+## 注意事项
+
+1. **响应式编程**: Gateway 使用 WebFlux，不支持传统的 Servlet API
+2. **无数据库**: Gateway 不连接数据库，排除 MyBatis Plus 等数据库相关依赖
+3. **Token 验证**: Gateway 统一验证 Token，后端服务无需再次验证
+4. **用户信息传递**: 后端服务通过请求头获取用户信息，而不是从 Token 解析
+5. **CSRF 禁用**: Gateway 通常禁用 CSRF 保护（前后端分离架构）
+
+## 版本要求
+
+- Java 21+
+- Spring Boot 3.5.5
+- Spring Cloud 2025.0.0.0
+- Nacos 3.0
+
+## 性能优化
+
+- 使用响应式编程模型，提供高并发处理能力
+- 支持懒加载初始化（开发环境）
+- 集成链路追踪，便于性能监控和问题排查

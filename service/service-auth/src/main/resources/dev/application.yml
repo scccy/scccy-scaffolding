@@ -3,7 +3,7 @@
 
 # 服务器配置
 server:
-  port: 30003
+  port: 30002
   servlet:
     context-path: /
 
@@ -13,6 +13,7 @@ spring:
   # 应用名称
   application:
     name: service-auth
+
 
 # 配置导入 - 从Nacos加载配置
   config:
@@ -91,10 +92,3 @@ management:
     zipkin:
       tracing:
         endpoint: http://117.50.197.170:9411/api/v2/spans
-
-jwt:
-  secret: ${JWT_SECRET:HJNkGh8dF2d84@31FysHsHsljd22GgT9jTLZJn36l8iwD8FzS0s9jmqPfKvVqk9s}
-  expiration: 7200000  # 2小时
-  refresh-expiration: 604800000  # 7天
-  header: Authorization
-  token-prefix: Bearer

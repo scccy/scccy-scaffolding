@@ -30,6 +30,12 @@ import java.util.List;
 public class OpenFeignConfig {
 
     /**
+     * 默认构造函数
+     */
+    public OpenFeignConfig() {
+    }
+
+    /**
      * 配置日志级别
      */
     @Bean
@@ -42,6 +48,8 @@ public class OpenFeignConfig {
      * 
      * 注意：在Feign 13.x版本中，Request.Options构造函数已被标记为过时
      * 但这是当前版本支持的正确用法，直到升级到更新的版本
+     * 
+     * @return Request.Options 配置对象，包含连接超时、读取超时和是否跟随重定向的配置
      */
     @Bean
     @SuppressWarnings("deprecation")
@@ -56,6 +64,8 @@ public class OpenFeignConfig {
 
     /**
      * 配置FastJSON2消息转换器
+     * 
+     * @return HttpMessageConverters 包含FastJSON2消息转换器的转换器集合
      */
     @Bean
     public HttpMessageConverters fastJsonHttpMessageConverters() {
@@ -90,6 +100,9 @@ public class OpenFeignConfig {
 
     /**
      * 配置编码器 - 使用FastJSON2
+     * 
+     * @param messageConverters 消息转换器工厂对象
+     * @return Encoder Feign编码器实例，支持表单和JSON编码
      */
     @Bean
     public Encoder feignEncoder(ObjectFactory<HttpMessageConverters> messageConverters) {
@@ -98,6 +111,9 @@ public class OpenFeignConfig {
 
     /**
      * 配置解码器 - 使用FastJSON2
+     * 
+     * @param messageConverters 消息转换器工厂对象
+     * @return Decoder Feign解码器实例，支持JSON解码
      */
     @Bean
     public Decoder feignDecoder(ObjectFactory<HttpMessageConverters> messageConverters) {

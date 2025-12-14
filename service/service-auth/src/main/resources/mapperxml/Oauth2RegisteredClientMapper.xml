@@ -19,7 +19,7 @@
         <result column="scopes" jdbcType="VARCHAR" property="scopes"/>
         <result column="client_settings" jdbcType="VARCHAR" property="clientSettings" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
         <result column="token_settings"  jdbcType="VARCHAR" property="tokenSettings"  typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
-        <result column="del_flag" jdbcType="VARCHAR" property="delFlag"/>
+        <result column="del_flag" jdbcType="TINYINT" property="delFlag"/>
         <result column="created_time" jdbcType="TIMESTAMP" property="createdTime"/>
         <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime"/>
         <result column="created_by" jdbcType="VARCHAR" property="createdBy"/>

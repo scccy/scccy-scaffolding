@@ -3,7 +3,7 @@
 
 # 服务器配置
 server:
-  port: 8080
+  port: 30000
 
 # Spring基础配置
 spring:

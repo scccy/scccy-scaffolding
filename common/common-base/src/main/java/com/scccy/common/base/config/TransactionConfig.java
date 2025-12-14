@@ -18,12 +18,20 @@ import java.util.Collections;
 
 /**
  * 全局事务配置类
- * 作者: scccy
- * 创建时间: 2025-07-31
+ * 通过AOP自动为Service层方法添加事务管理
+ * 
+ * @author scccy
+ * @since 2025-07-31
  */
 @Aspect
 @Configuration
 public class TransactionConfig {
+    
+    /**
+     * 默认构造函数
+     */
+    public TransactionConfig() {
+    }
     // 切入点 - 修复为正确的包路径
     private static final String AOP_POINTCUT_EXPRESSION = "execution(* com.origin.*.service.*.*(..))";
     // 需要添加事务切入的方法列表, 使用这些前缀的方法都会被添加事务
@@ -33,6 +41,12 @@ public class TransactionConfig {
     @Autowired
     private TransactionManager transactionManager;
 
+    /**
+     * 配置事务拦截器
+     * 为增删改方法配置REQUIRED事务，为查询方法配置SUPPORTS只读事务
+     * 
+     * @return TransactionInterceptor 事务拦截器实例
+     */
     @Bean
     public TransactionInterceptor txAdvice() {
         // 增删改事务
@@ -71,6 +85,12 @@ public class TransactionConfig {
         return new TransactionInterceptor(transactionManager, source);
     }
 
+    /**
+     * 配置事务切面顾问
+     * 将事务拦截器应用到指定的切入点表达式
+     * 
+     * @return Advisor 事务切面顾问实例
+     */
     @Bean
     public Advisor txAdviceAdvisor() {
         // 声明切点要切入的面

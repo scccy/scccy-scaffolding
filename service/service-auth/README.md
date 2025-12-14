@@ -1,645 +1,302 @@
-# Service-Auth 模块架构与数据流转说明
+# Service-Auth 认证授权服务
 
-## 1. 模块概述
+## 概述
 
-`service-auth` 是一个基于 **Spring Authorization Server** 的 OAuth2 授权服务模块，实现了完整的 OAuth2 和 OpenID Connect (OIDC) 协议支持。
+`service-auth` 是系统的认证授权中心，提供两种服务模式：**第三方客户端 OAuth2 授权服务**和**自有微服务用户登录服务**。作为系统的统一认证入口，负责用户认证、Token 生成、权限管理等核心功能。
 
-### 核心功能
-- ✅ **OAuth2 授权码模式** (Authorization Code Flow)
-- ✅ **客户端凭证模式** (Client Credentials Flow)
-- ✅ **设备码授权模式** (Device Code Flow)
-- ✅ **OpenID Connect 1.0** 支持
-- ✅ **JWT Token** 生成与验证
-- ✅ **用户授权同意管理**
-- ✅ **客户端注册与配置**
+## 核心功能
 
-### 技术栈
-- Spring Boot 3.x
-- Spring Security 6.x
-- Spring Authorization Server
-- MyBatis-Plus (数据持久化)
-- MySQL (数据存储)
-- Thymeleaf (页面模板)
+### 第三方客户端 OAuth2 授权服务
+- OAuth2 授权码模式（Authorization Code Flow）
+- 客户端凭证模式（Client Credentials Flow）
+- 设备码授权模式（Device Code Flow）
+- OpenID Connect 1.0 支持
+- 客户端注册与管理
+- 用户授权同意管理
 
----
+### 自有微服务用户登录服务
+- 用户注册与登录
+- JWT Token 生成与验证
+- Token 黑名单管理
+- 用户信息获取
 
-## 2. 模块结构
+## 两种服务模式
 
-```
-service-auth/
-├── config/                          # 配置类
-│   └── AuthorizationServerConfig    # OAuth2 授权服务器配置
-├── controller/                      # 控制器层
-│   ├── AuthorizationController       # 授权相关页面控制器
-│   ├── RegisteredClientController   # 客户端管理控制器
-│   └── TokenController             # Token 相关控制器
-├── oauth2/                          # OAuth2 核心组件
-│   ├── device/                      # 设备码授权相关
-│   │   ├── DeviceClientAuthenticationConverter
-│   │   ├── DeviceClientAuthenticationProvider
-│   │   └── DeviceClientAuthenticationToken
-│   ├── handler/                     # 处理器
-│   │   ├── Oauth2AccessDeniedHandler
-│   │   ├── Oauth2DeviceSuccessHandler
-│   │   └── Oauth2FailureHandler
-│   ├── Oauth2AuthorizationConsentService  # 授权同意服务
-│   └── Oauth2RegisteredClientRepository  # 客户端仓库
-├── dao/                             # 数据访问层
-│   ├── mapper/                      # MyBatis Mapper
-│   └── service/                     # Service 层
-├── domain/                          # 领域模型
-│   ├── mp/                          # MyBatis-Plus 实体
-│   ├── form/                        # 表单对象
-│   └── vo/                          # 视图对象
-└── fegin/                           # Feign 客户端
-    ├── SystemUserClient             # 系统用户服务客户端
-    └── SystemUserClientFallback    # 降级服务
-```
+### 模式一：第三方客户端（OAuth2 授权服务）
 
----
+**适用场景**：第三方应用需要接入系统，需要用户授权同意的场景
 
-## 3. 数据表结构
+**使用流程**：
 
-### 3.1 oauth2_registered_client (客户端注册表)
+1. **客户端注册**
+   - 第三方应用通过管理接口注册客户端
+   - 获取 `client_id` 和 `client_secret`
+   - 配置授权类型、回调地址、授权范围等
 
-存储已注册的 OAuth2 客户端信息。
+2. **获取 Token**
+   - 使用 OAuth2 标准流程获取 Token
+   - 支持授权码模式、客户端凭证模式等
+   - Token 由 Spring Authorization Server 生成
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | varchar(100) | UUID，主键 |
-| client_id | varchar(100) | 客户端ID，唯一索引 |
-| client_secret | varchar(200) | 客户端密钥（BCrypt加密） |
-| client_name | varchar(200) | 客户端名称 |
-| authorization_grant_types | varchar(1000) | 支持的授权类型（逗号分隔） |
-| client_authentication_methods | varchar(1000) | 客户端认证方法（逗号分隔） |
-| redirect_uris | varchar(1000) | 重定向URI（逗号分隔） |
-| scopes | varchar(1000) | 支持的授权范围（逗号分隔） |
-| client_settings | text | 客户端配置（JSON） |
-| token_settings | text | Token 配置（JSON） |
+3. **Token 使用**
+   - Token 包含客户端信息、授权范围、用户信息
+   - Token 过期时间由客户端注册时配置
+   - 支持 Token 刷新机制
 
-### 3.2 oauth2_authorization (授权记录表)
+**数据存储**：
+- 客户端信息存储在 `oauth2_registered_client` 表
+- 授权记录和 Token 存储在 `oauth2_authorization` 表
+- 用户授权同意记录存储在 `oauth2_authorization_consent` 表
 
-存储 OAuth2 授权过程中的所有 Token 和状态信息。
+### 模式二：自有微服务（用户登录服务）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | varchar(100) | UUID，主键 |
-| registered_client_id | varchar(100) | 客户端ID |
-| principal_name | varchar(200) | 主体名称（用户名） |
-| authorization_grant_type | varchar(100) | 授权类型 |
-| authorized_scopes | varchar(1000) | 已授权的范围 |
-| state | varchar(500) | 状态信息（CSRF防护） |
-| authorization_code_value | blob | 授权码（加密存储） |
-| access_token_value | blob | Access Token（JWT，加密存储） |
-| refresh_token_value | blob | Refresh Token（加密存储） |
-| oidc_id_token_value | blob | ID Token（JWT，加密存储） |
-| device_code_value | blob | 设备码（加密存储） |
-| user_code_value | blob | 用户码（加密存储） |
+**适用场景**：自有微服务、前端应用直接登录，无需 OAuth2 复杂流程
 
-**注意**：所有 Token 相关字段使用 `blob` 类型存储加密后的二进制数据。
+**使用流程**：
 
-### 3.3 oauth2_authorization_consent (授权同意记录表)
+1. **用户注册**
+   - 用户通过注册接口创建账号
+   - 系统调用 `service-system` 保存用户信息
 
-存储用户的授权同意记录，用于判断用户是否已授权客户端访问特定资源。
+2. **用户登录**
+   - 用户提交用户名和密码
+   - 系统验证用户信息（调用 `service-system`）
+   - 生成 JWT Token 返回给用户
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| registered_client_id | varchar(100) | 客户端ID（复合主键） |
-| principal_name | varchar(200) | 主体名称（复合主键） |
-| authorities | text | 已同意的授权范围（逗号分隔） |
+3. **Token 使用**
+   - Token 包含用户完整信息（userId、username、nickName 等）
+   - Token 过期时间由全局配置决定
+   - 支持 Token 黑名单机制（登出功能）
 
----
+**数据存储**：
+- 用户信息存储在 `service-system` 服务的用户表
+- Token 黑名单存储在 Redis（通过 JetCache）
 
-## 4. 权限控制机制
+## 与 Service-System 的联动
 
-### 4.1 安全过滤器链配置
+`service-auth` 通过 Feign 客户端与 `service-system` 服务进行数据交互，实现用户信息的查询和管理。
 
-`AuthorizationServerConfig` 配置了 OAuth2 授权服务器的安全过滤器链：
+### 数据交互接口
 
-```java
-SecurityFilterChain authorizationServerSecurityFilterChain(
-    HttpSecurity httpSecurity,
-    RegisteredClientRepository registeredClientRepository,
-    AuthorizationServerSettings authorizationServerSettings
-)
-```
+1. **用户信息查询**
+   - 根据用户名获取用户详细信息
+   - 用于登录验证和 Token 生成
 
-**关键配置点**：
-1. **优先级最高** (`@Order(Ordered.HIGHEST_PRECEDENCE)`)：确保 OAuth2 过滤器链优先执行
-2. **端点配置**：
-   - `/oauth2/authorize` - 授权端点
-   - `/oauth2/token` - Token 端点
-   - `/oauth2/device_authorization` - 设备授权端点
-   - `/oauth2/userinfo` - 用户信息端点
-3. **客户端认证**：支持多种认证方式（client_secret_basic、client_secret_post、none等）
-4. **设备码支持**：自定义 Converter 和 Provider 支持设备码授权流程
+2. **用户注册**
+   - 创建新用户账号
+   - 密码加密后存储到 `service-system`
 
-### 4.2 核心组件
+3. **用户权限查询**
+   - 获取用户的角色和菜单权限
+   - 用于 Token 中权限信息的填充
 
-#### 4.2.1 RegisteredClientRepository
+### 数据流转
 
-**实现类**：`Oauth2RegisteredClientRepository`
-
-**职责**：
-- 从数据库查询客户端配置信息
-- 将 `Oauth2RegisteredClientMp` 转换为 Spring Security 的 `RegisteredClient`
-- 验证客户端是否存在及其有效性
-
-**数据流转**：
-```
-数据库 (oauth2_registered_client)
-    ↓ MyBatis-Plus
-Oauth2RegisteredClientMp (实体)
-    ↓ RegisteredClientConvert
-RegisteredClient (Spring Security)
-    ↓ OAuth2 授权流程
-```
-
-#### 4.2.2 OAuth2AuthorizationConsentService
-
-**实现类**：`Oauth2AuthorizationConsentService`
-
-**职责**：
-- 保存用户的授权同意记录
-- 查询用户是否已同意授权
-- 删除授权同意记录
-
-**数据流转**：
-```
-用户授权同意操作
-    ↓
-OAuth2AuthorizationConsent (Spring Security)
-    ↓ AuthorizationConsentConvert
-Oauth2AuthorizationConsentMp (实体)
-    ↓ MyBatis-Plus
-数据库 (oauth2_authorization_consent)
-```
-
-#### 4.2.3 UserInfoMapper
-
-**职责**：将 JWT Token 中的用户信息映射到 OIDC UserInfo
-
-**数据流转**：
-```
-JWT Token (JwtAuthenticationToken)
-    ↓ 提取用户名
-SystemUserClient.getByUserName()
-    ↓ Feign 调用 service-system
-SysUserMp (用户信息)
-    ↓ 映射
-OidcUserInfo (OIDC 用户信息)
-```
-
----
-
-## 5. 数据流转详解
-
-### 5.1 授权码模式 (Authorization Code Flow)
-
-```
-┌──────────┐                ┌──────────┐                ┌──────────┐
-│   用户   │                │ 客户端   │                │授权服务器│
-│ (浏览器) │                │ 应用     │                │service-auth│
-└────┬─────┘                └────┬─────┘                └────┬─────┘
-     │                            │                            │
-     │  1. 访问受保护资源         │                            │
-     │──────────────────────────>│                            │
-     │                            │                            │
-     │  2. 重定向到授权端点       │                            │
-     │<──────────────────────────│                            │
-     │   GET /oauth2/authorize?  │                            │
-     │   client_id=xxx&scope=xxx │                            │
-     │                            │                            │
-     │  3. 用户登录              │                            │
-     │───────────────────────────────────────────────────────>│
-     │   POST /login              │                            │
-     │                            │                            │
-     │  4. 显示授权确认页面       │                            │
-     │<───────────────────────────────────────────────────────│
-     │   GET /oauth2/consent      │                            │
-     │   (查询授权同意记录)        │                            │
-     │   oauth2_authorization_consent表                        │
-     │                            │                            │
-     │  5. 用户确认授权           │                            │
-     │───────────────────────────────────────────────────────>│
-     │   POST /oauth2/authorize   │                            │
-     │                            │                            │
-     │  6. 生成授权码并重定向     │                            │
-     │<───────────────────────────────────────────────────────│
-     │   重定向: redirect_uri?    │                            │
-     │   code=xxx&state=xxx        │                            │
-     │                            │                            │
-     │                            │  7. 使用授权码换取Token    │
-     │                            │───────────────────────────>│
-     │                            │   POST /oauth2/token       │
-     │                            │   grant_type=authorization_code│
-     │                            │   code=xxx                 │
-     │                            │                            │
-     │                            │  8. 验证授权码并生成Token  │
-     │                            │   (查询 oauth2_authorization表)│
-     │                            │   (生成 JWT Token)         │
-     │                            │                            │
-     │                            │  9. 返回 Access Token      │
-     │                            │<───────────────────────────│
-     │                            │   {                        │
-     │                            │     "access_token": "xxx", │
-     │                            │     "refresh_token": "xxx",│
-     │                            │     "expires_in": 7200     │
-     │                            │   }                        │
-     │                            │                            │
-     │  10. 使用 Token 访问资源   │                            │
-     │────────────────────────────────────────────────────────>│
-     │   GET /api/resource        │                            │
-     │   Authorization: Bearer xxx│                            │
-     │                            │                            │
-```
-
-**关键数据库操作**：
-
-1. **授权请求阶段**：
-   - 查询 `oauth2_registered_client` 表验证客户端
-   - 查询 `oauth2_authorization_consent` 表检查已授权范围
-
-2. **授权码生成阶段**：
-   - 插入/更新 `oauth2_authorization` 表，存储授权码信息
-
-3. **Token 交换阶段**：
-   - 查询 `oauth2_authorization` 表验证授权码
-   - 生成 JWT Token（包含用户信息、客户端ID、授权范围等）
-   - 更新 `oauth2_authorization` 表，存储 Token 信息
-
-4. **授权同意保存**：
-   - 用户确认授权后，保存/更新 `oauth2_authorization_consent` 表
-
----
-
-### 5.2 设备码授权模式 (Device Code Flow)
-
-```
-┌──────────┐                ┌──────────┐                ┌──────────┐
-│ 设备应用 │                │ 授权服务器│                │   用户   │
-│          │                │service-auth│                │ (浏览器) │
-└────┬─────┘                └────┬─────┘                └────┬─────┘
-     │                            │                            │
-     │  1. 请求设备码             │                            │
-     │──────────────────────────>│                            │
-     │   POST /oauth2/device_authorization│                   │
-     │   client_id=xxx            │                            │
-     │                            │                            │
-     │  2. 返回设备码和用户码      │                            │
-     │<───────────────────────────│                            │
-     │   {                        │                            │
-     │     "device_code": "xxx",  │                            │
-     │     "user_code": "xxx",    │                            │
-     │     "verification_uri":    │                            │
-     │       "/oauth2/activate",  │                            │
-     │     "expires_in": 600      │                            │
-     │   }                        │                            │
-     │                            │                            │
-     │                            │  3. 显示用户码给用户       │
-     │                            │───────────────────────────>│
-     │                            │   用户码: xxx              │
-     │                            │   访问: /oauth2/activate   │
-     │                            │                            │
-     │                            │  4. 用户输入用户码验证      │
-     │                            │<───────────────────────────│
-     │                            │   GET /oauth2/activate     │
-     │                            │   ?user_code=xxx           │
-     │                            │                            │
-     │                            │  5. 显示授权确认页面       │
-     │                            │───────────────────────────>│
-     │                            │   GET /oauth2/consent       │
-     │                            │                            │
-     │                            │  6. 用户确认授权           │
-     │                            │<───────────────────────────│
-     │                            │   POST /oauth2/device_verification│
-     │                            │                            │
-     │  7. 轮询请求 Token         │                            │
-     │───────────────────────────>│                            │
-     │   POST /oauth2/token       │                            │
-     │   grant_type=device_code   │                            │
-     │   device_code=xxx          │                            │
-     │                            │                            │
-     │   (可能需要多次轮询，直到   │                            │
-     │    用户完成授权)           │                            │
-     │                            │                            │
-     │  8. 返回 Access Token      │                            │
-     │<───────────────────────────│                            │
-     │   {                        │                            │
-     │     "access_token": "xxx", │                            │
-     │     "refresh_token": "xxx" │                            │
-     │   }                        │                            │
-```
-
-**关键数据库操作**：
-
-1. **设备码生成阶段**：
-   - 验证客户端（查询 `oauth2_registered_client` 表）
-   - 插入 `oauth2_authorization` 表，存储 `device_code` 和 `user_code`
-
-2. **用户验证阶段**：
-   - 用户访问 `/oauth2/activate`，输入 `user_code`
-   - 查询 `oauth2_authorization` 表验证 `user_code`
-   - 显示授权确认页面
-
-3. **授权完成阶段**：
-   - 用户确认授权后，更新 `oauth2_authorization` 表
-   - 保存授权同意记录到 `oauth2_authorization_consent` 表
-
-4. **Token 获取阶段**：
-   - 设备应用轮询 `/oauth2/token` 端点
-   - 验证 `device_code`（查询 `oauth2_authorization` 表）
-   - 生成 JWT Token 并返回
-
----
-
-### 5.3 客户端凭证模式 (Client Credentials Flow)
-
-```
-┌──────────┐                ┌──────────┐
-│ 客户端   │                │授权服务器│
-│ 应用     │                │service-auth│
-└────┬─────┘                └────┬─────┘
-     │                            │
-     │  1. 使用客户端凭证获取Token │
-     │───────────────────────────>│
-     │   POST /oauth2/token       │
-     │   grant_type=client_credentials│
-     │   client_id=xxx            │
-     │   client_secret=xxx         │
-     │                            │
-     │  2. 验证客户端凭证         │
-     │   (查询 oauth2_registered_client表)│
-     │                            │
-     │  3. 生成 Token             │
-     │   (生成 JWT Token)         │
-     │   (存储到 oauth2_authorization表)│
-     │                            │
-     │  4. 返回 Access Token      │
-     │<───────────────────────────│
-     │   {                        │
-     │     "access_token": "xxx", │
-     │     "token_type": "Bearer", │
-     │     "expires_in": 7200     │
-     │   }                        │
-     │                            │
-```
-
-**关键数据库操作**：
-
-1. **客户端认证**：
-   - 查询 `oauth2_registered_client` 表验证 `client_id` 和 `client_secret`
-   - 验证客户端支持的 `grant_type` 是否包含 `client_credentials`
-
-2. **Token 生成**：
-   - 生成 JWT Token（不包含用户信息，只包含客户端ID和授权范围）
-   - 插入 `oauth2_authorization` 表存储 Token 信息
-
----
-
-### 5.4 Token 刷新流程 (Refresh Token Flow)
-
-```
-┌──────────┐                ┌──────────┐
-│ 客户端   │                │授权服务器│
-│ 应用     │                │service-auth│
-└────┬─────┘                └────┬─────┘
-     │                            │
-     │  1. 使用 Refresh Token     │
-     │───────────────────────────>│
-     │   POST /oauth2/token       │
-     │   grant_type=refresh_token │
-     │   refresh_token=xxx        │
-     │                            │
-     │  2. 验证 Refresh Token     │
-     │   (查询 oauth2_authorization表)│
-     │   (检查 Token 是否过期)     │
-     │                            │
-     │  3. 生成新的 Access Token  │
-     │   (可选：生成新的 Refresh Token)│
-     │   (更新 oauth2_authorization表)│
-     │                            │
-     │  4. 返回新的 Token         │
-     │<───────────────────────────│
-     │   {                        │
-     │     "access_token": "new_xxx",│
-     │     "refresh_token": "new_xxx",│
-     │     "expires_in": 7200     │
-     │   }                        │
-     │                            │
-```
-
-**关键数据库操作**：
-
-1. **Refresh Token 验证**：
-   - 查询 `oauth2_authorization` 表验证 `refresh_token`
-   - 检查 Token 是否过期
-
-2. **新 Token 生成**：
-   - 生成新的 JWT Token
-   - 更新 `oauth2_authorization` 表，替换旧的 Token
-
----
-
-### 5.5 用户信息获取流程 (OpenID Connect UserInfo)
-
-```
-┌──────────┐                ┌──────────┐                ┌──────────┐
-│ 客户端   │                │授权服务器│                │ 用户服务 │
-│ 应用     │                │service-auth│                │service-system│
-└────┬─────┘                └────┬─────┘                └────┬─────┘
-     │                            │                            │
-     │  1. 使用 Access Token 获取用户信息│                     │
-     │───────────────────────────>│                            │
-     │   GET /oauth2/userinfo      │                            │
-     │   Authorization: Bearer xxx│                            │
-     │                            │                            │
-     │  2. 验证 JWT Token          │                            │
-     │   (解析 Token，提取用户信息)│                            │
-     │                            │                            │
-     │  3. 调用用户服务获取详细信息│                            │
-     │                            │───────────────────────────>│
-     │                            │   Feign: SystemUserClient  │
-     │                            │   .getByUserName(username)│
-     │                            │                            │
-     │                            │  4. 返回用户详细信息       │
-     │                            │<───────────────────────────│
-     │                            │   SysUserMp                │
-     │                            │                            │
-     │  5. 映射为用户信息并返回    │                            │
-     │<───────────────────────────│                            │
-     │   {                        │                            │
-     │     "sub": "username",     │                            │
-     │     "name": "nickname"     │                            │
-     │   }                        │                            │
-     │                            │                            │
-```
-
-**关键数据流转**：
-
-1. **Token 验证**：
-   - 验证 JWT Token 签名和有效期
-   - 从 Token 中提取用户名（principal name）
-
-2. **用户信息查询**：
-   - 通过 Feign 客户端调用 `service-system` 服务
-   - 查询用户详细信息（`SysUserMp`）
-
-3. **信息映射**：
-   - 使用 `userInfoMapper` 将 `SysUserMp` 映射为 `OidcUserInfo`
-   - 返回标准化的 OIDC 用户信息
-
----
-
-## 6. 关键流程说明
-
-### 6.1 客户端注册流程
-
-```
-管理员/系统
-    ↓
-POST /client (RegisteredClientController)
-    ↓
-RegisteredClientForm (表单验证)
-    ↓
-RegisteredClientConvert.convertToRegisteredClientPo()
-    ↓
-Oauth2RegisteredClientMp (实体)
-    ↓
-Oauth2RegisteredClientMpService.save()
-    ↓
-MyBatis-Plus 插入数据库
-    ↓
-oauth2_registered_client 表
-```
-
-### 6.2 用户授权同意流程
+#### OAuth2 模式下的数据流
 
 ```
 用户访问授权端点
     ↓
-GET /oauth2/consent (AuthorizationController)
+service-auth 验证客户端信息
+    ↓ (查询 oauth2_registered_client 表)
+用户登录/授权
     ↓
-查询 oauth2_registered_client 表（验证客户端）
+service-auth 生成 Token
+    ↓ (调用 SystemUserClient.getByUserName)
+service-system 返回用户信息
     ↓
-查询 oauth2_authorization_consent 表（检查已授权范围）
+service-auth 将用户信息添加到 Token Claims
+    ↓ (调用 SystemUserClient.getUserAuthorities)
+service-system 返回用户权限列表
     ↓
-显示授权确认页面
+service-auth 将权限添加到 Token Claims
     ↓
-用户确认授权
+生成完整的 JWT Token
     ↓
-POST /oauth2/authorize
-    ↓
-Oauth2AuthorizationConsentService.save()
-    ↓
-保存授权同意记录
-    ↓
-oauth2_authorization_consent 表
+返回给客户端
 ```
 
-### 6.3 Token 生成与存储流程
+#### 用户登录模式下的数据流
 
 ```
-授权成功/Token 交换
+用户提交登录请求
     ↓
-Spring Authorization Server
+service-auth 接收登录信息
+    ↓ (调用 SystemUserClient.getByUserName)
+service-system 返回用户信息
     ↓
-生成 JWT Token
+service-auth 验证密码和用户状态
     ↓
-OAuth2AuthorizationService (Spring Security)
+验证通过后生成 JWT Token
+    ↓ (调用 SystemUserClient.getUserAuthorities)
+service-system 返回用户权限列表
     ↓
-保存授权记录
+service-auth 将用户信息和权限添加到 Token
     ↓
-Oauth2AuthorizationMpService.save()
+生成完整的 JWT Token
     ↓
-MyBatis-Plus 插入/更新数据库
-    ↓
-oauth2_authorization 表
-    ↓
-存储 Token 信息（加密存储为 blob）
+返回给用户
 ```
 
----
-
-## 7. 安全机制
-
-### 7.1 客户端认证
-
-支持多种客户端认证方法：
-- **client_secret_basic**：HTTP Basic 认证
-- **client_secret_post**：POST 参数认证
-- **none**：无认证（如设备码流程）
-
-### 7.2 Token 安全
-
-- **JWT Token**：自包含，包含签名和过期时间
-- **加密存储**：所有 Token 在数据库中加密存储（blob 类型）
-- **签名算法**：RS256（非对称加密）
-- **Token 格式**：`self-contained`（自包含格式）
-
-### 7.3 授权同意
-
-- **授权同意记录**：记录用户已同意的授权范围，避免重复询问
-- **Scope 验证**：验证客户端请求的 scope 是否在已注册范围内
-- **CSRF 防护**：使用 `state` 参数防止 CSRF 攻击
-
-### 7.4 错误处理
-
-- **统一错误处理**：`Oauth2FailureHandler` 统一处理 OAuth2 相关错误
-- **访问拒绝处理**：`Oauth2AccessDeniedHandler` 处理无权限访问
-- **降级服务**：`SystemUserClientFallback` 处理用户服务不可用的情况
-
----
-
-## 8. 依赖关系
+#### 用户注册模式下的数据流
 
 ```
-service-auth
+用户提交注册请求
     ↓
-├── common-modules (通用模块)
-├── common-redis-cache (Redis 缓存)
-└── service-system (用户服务)
-    └── Feign 调用获取用户信息
+service-auth 接收注册信息
+    ↓ (调用 SystemUserClient.register)
+service-system 创建用户记录
+    ↓
+service-system 返回新创建的用户信息
+    ↓
+service-auth 生成初始 JWT Token
+    ↓
+返回 Token 和用户信息
 ```
 
----
+## 数据流详解
 
-## 9. 配置要点
+### 1. OAuth2 Token 生成流程
 
-### 9.1 数据库配置
+**触发时机**：客户端通过 OAuth2 流程获取 Token 时
 
-需要创建以下表：
-- `oauth2_registered_client`：客户端注册表
-- `oauth2_authorization`：授权记录表
-- `oauth2_authorization_consent`：授权同意记录表
+**数据流**：
+1. Spring Authorization Server 开始生成 Token
+2. Token 自定义器被调用
+3. 从认证上下文中提取用户名
+4. 通过 Feign 调用 `service-system` 获取用户详细信息
+5. 通过 Feign 调用 `service-system` 获取用户权限列表
+6. 将用户信息和权限添加到 Token Claims
+7. Spring Authorization Server 使用 JWK 密钥对签名 Token
+8. 将 Token 存储到 `oauth2_authorization` 表
+9. 返回 Token 给客户端
 
-### 9.2 端点配置
+**关键数据**：
+- 用户信息：userId、username、nickName、status
+- 权限信息：角色标识（ROLE_*）、菜单权限（system:*:*）
+- 客户端信息：client_id、授权范围（scopes）
 
-默认端点（可通过 `AuthorizationServerSettings` 配置）：
-- `/oauth2/authorize`：授权端点
-- `/oauth2/token`：Token 端点
-- `/oauth2/device_authorization`：设备授权端点
-- `/oauth2/userinfo`：用户信息端点
-- `/oauth2/jwks`：JWK Set 端点
+### 2. 用户登录 Token 生成流程
 
-### 9.3 自定义页面
+**触发时机**：用户通过 `/api/user/login` 接口登录时
 
-- `/login`：登录页面
-- `/oauth2/consent`：授权确认页面
-- `/oauth2/activate`：设备验证页面
-- `/oauth2/activated`：设备验证成功页面
+**数据流**：
+1. 接收用户名和密码
+2. 通过 Feign 调用 `service-system` 获取用户信息
+3. 验证用户状态（是否启用、是否删除）
+4. 验证密码（BCrypt 加密验证）
+5. 通过 Feign 调用 `service-system` 获取用户权限
+6. 使用 JwtUtils 生成 JWT Token
+7. 将用户信息和权限添加到 Token Claims
+8. Token 签名（使用 JwtConfig 配置的密钥）
+9. 返回 Token 给用户
 
----
+**关键数据**：
+- 用户信息：userId、username、nickName、status、email、phone
+- 权限信息：角色和菜单权限列表
+- Token 元数据：过期时间、签发时间等
 
-## 10. 总结
+### 3. 用户信息获取流程（OAuth2 UserInfo 端点）
 
-`service-auth` 模块实现了完整的 OAuth2 和 OpenID Connect 协议支持，通过以下核心机制实现权限控制：
+**触发时机**：客户端使用 Access Token 获取用户信息时
 
-1. **客户端管理**：通过 `RegisteredClientRepository` 管理客户端配置
-2. **授权流程**：支持授权码、设备码、客户端凭证等多种授权流程
-3. **Token 管理**：JWT Token 的生成、存储和验证
-4. **授权同意**：通过 `OAuth2AuthorizationConsentService` 管理用户的授权同意
-5. **用户信息**：通过 Feign 客户端获取用户详细信息并映射为 OIDC 格式
+**数据流**：
+1. 客户端携带 Access Token 请求 `/oauth2/userinfo`
+2. Gateway 验证 Token 有效性
+3. service-auth 解析 Token，提取用户名
+4. 通过 Feign 调用 `service-system` 获取用户详细信息
+5. 将用户信息映射为 OIDC UserInfo 格式
+6. 返回标准化的用户信息
 
-所有数据流转都通过标准化的 OAuth2 流程进行，确保安全性和可扩展性。
+**关键数据**：
+- 用户标识：sub（用户名）
+- 用户属性：name（昵称）等
 
+### 4. Token 验证流程（Gateway）
+
+**触发时机**：客户端携带 Token 访问受保护资源时
+
+**数据流**：
+1. Gateway 接收请求，提取 Token
+2. Gateway 验证 Token 签名（通过 JWK Set）
+3. Gateway 验证 Token 过期时间
+4. Gateway 从 Token 中提取用户信息
+5. Gateway 将用户信息添加到请求头
+6. 转发请求到后端服务
+7. 后端服务从请求头获取用户信息
+
+**关键数据**：
+- 请求头：X-User-Id、X-Username、X-Authorities
+
+## 数据存储
+
+### service-auth 本地存储
+
+- **oauth2_registered_client**：客户端注册信息
+- **oauth2_authorization**：授权记录和 Token（加密存储）
+- **oauth2_authorization_consent**：用户授权同意记录
+
+### service-system 存储
+
+- **用户表**：用户基本信息、密码（BCrypt 加密）
+- **角色表**：角色定义
+- **菜单表**：菜单和权限定义
+- **用户角色关联表**：用户与角色的关系
+- **角色菜单关联表**：角色与菜单权限的关系
+
+### Redis 存储（通过 JetCache）
+
+- **Token 黑名单**：用户登出后的 Token 黑名单
+- **JWK Set 缓存**：用于 Token 签名验证的密钥对
+
+## 安全机制
+
+### Token 安全
+
+- **JWT 签名**：使用 RSA 密钥对签名，防止 Token 被篡改
+- **Token 过期**：支持 Token 过期时间配置
+- **Token 黑名单**：支持主动登出，将 Token 加入黑名单
+- **密钥管理**：JWK Set 自动生成和管理
+
+### 用户认证安全
+
+- **密码加密**：使用 BCrypt 加密存储（强度 12）
+- **用户状态验证**：验证用户是否启用、是否删除
+- **权限验证**：Token 中包含用户权限，后端服务可进行权限控制
+
+### 客户端认证安全
+
+- **客户端密钥**：使用 BCrypt 加密存储
+- **客户端认证方法**：支持多种认证方式（client_secret_basic 等）
+- **授权范围控制**：限制客户端可访问的资源范围
+
+## 使用方式
+
+### 第三方客户端接入
+
+1. 通过管理接口注册客户端，获取 `client_id` 和 `client_secret`
+2. 根据业务需求选择合适的授权类型（授权码、客户端凭证等）
+3. 实现 OAuth2 标准流程获取 Token
+4. 使用 Token 访问受保护的资源
+
+### 自有微服务接入
+
+1. 用户通过注册接口创建账号
+2. 用户通过登录接口获取 JWT Token
+3. 在请求头中携带 Token 访问受保护的资源
+4. 后端服务从请求头获取用户信息进行业务处理
+
+## 版本要求
+
+- Java 21+
+- Spring Boot 3.5.5
+- Spring Cloud 2025.0.0
+- Spring Authorization Server
+- Nacos 3.0
+
+## 依赖服务
+
+- **service-system**：用户信息管理、权限管理
+- **Redis**：Token 黑名单、JWK Set 缓存
+- **MySQL**：OAuth2 相关数据存储
+- **Gateway**：统一 Token 验证和路由

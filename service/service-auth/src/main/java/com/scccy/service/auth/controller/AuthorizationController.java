@@ -24,13 +24,13 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -38,8 +38,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Controller
-@Tag(name = "OAuth2 授权", description = "OAuth2 授权相关页面接口，包括登录、授权确认、设备验证等")
+@RestController
+@Tag(name = "OAuth2 授权", description = "OAuth2 授权相关 API 接口（前后端分离架构）")
 public class AuthorizationController {
 
     @Resource
@@ -97,28 +97,28 @@ public class AuthorizationController {
     }
 
     /**
-     * 授权确认页面
+     * 获取授权确认数据（前后端分离）
+     * <p>
+     * 返回授权确认所需的数据，前端根据这些数据渲染授权确认页面
      *
      * @param principal 认证信息
-     * @param model     页面model
      * @param clientId  客户端ID
      * @param scope     授权范围
      * @param state     状态信息
      * @param userCode  设备码
-     * @return 授权确认页面
+     * @return 授权确认数据
      */
     @Operation(
-            summary = "授权确认页面",
-            description = "OAuth2 授权确认页面，用户可以选择是否同意授权客户端访问其资源"
+            summary = "获取授权确认数据",
+            description = "前后端分离架构：返回 OAuth2 授权确认所需的数据，前端根据这些数据渲染授权确认页面"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "返回授权确认页面视图", content = @Content),
+            @ApiResponse(responseCode = "200", description = "返回授权确认数据", content = @Content),
             @ApiResponse(responseCode = "400", description = "请求参数错误"),
             @ApiResponse(responseCode = "401", description = "未认证，需要先登录")
     })
     @GetMapping(value = "/oauth2/consent")
-    public String consent(Principal principal,
-                          Model model,
+    public ResultData<Map<String, Object>> getConsentData(Principal principal,
                           @Parameter(description = "客户端ID", required = true)
                           @RequestParam(OAuth2ParameterNames.CLIENT_ID) String clientId,
                           @Parameter(description = "授权范围，多个范围用空格分隔", required = true)
@@ -127,7 +127,7 @@ public class AuthorizationController {
                           @RequestParam(OAuth2ParameterNames.STATE) String state,
                           @Parameter(description = "设备码（设备授权流程中使用）")
                           @RequestParam(name = OAuth2ParameterNames.USER_CODE, required = false) String userCode) {
-        // Remove scopes that were already approved，需要授权的scope
+        // 需要授权的scope
         Set<String> scopesToApprove = new HashSet<>();
         // 已授权的scope
         Set<String> previouslyApprovedScopes = new HashSet<>();
@@ -149,51 +149,65 @@ public class AuthorizationController {
                 scopesToApprove.add(requestedScope);
             }
         }
-        model.addAttribute("clientId", clientId);
-        model.addAttribute("state", state);
-        model.addAttribute("scopes", withDescription(scopesToApprove));
-        model.addAttribute("previouslyApprovedScopes", withDescription(previouslyApprovedScopes));
-        model.addAttribute("principalName", principal.getName());
-        model.addAttribute("userCode", userCode);
-        model.addAttribute("requestURI", StringUtils.hasText(userCode) ? "/oauth2/device_verification" : "/oauth2/authorize");
-        return "consent";
+        
+        // 构建返回数据
+        Map<String, Object> data = new HashMap<>();
+        data.put("clientId", clientId);
+        data.put("state", state);
+        data.put("scopes", withDescription(scopesToApprove));
+        data.put("previouslyApprovedScopes", withDescription(previouslyApprovedScopes));
+        data.put("principalName", principal.getName());
+        data.put("userCode", userCode);
+        data.put("requestURI", StringUtils.hasText(userCode) ? "/oauth2/device_verification" : "/oauth2/authorize");
+        
+        return ResultData.ok(data);
     }
 
     /**
-     * 设备验证页面
+     * 获取设备验证信息（前后端分离）
+     * <p>
+     * 返回设备授权验证所需的信息，前端根据这些信息渲染设备验证页面
      *
      * @param userCode 用户码
-     * @return 设备验证页面
+     * @return 设备验证信息
      */
     @Operation(
-            summary = "设备验证页面",
-            description = "设备授权码验证页面，用于设备授权流程中用户输入设备码进行验证"
+            summary = "获取设备验证信息",
+            description = "前后端分离架构：返回设备授权验证所需的信息，前端根据这些信息渲染设备验证页面"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "返回设备验证页面视图或重定向到验证页面"),
-            @ApiResponse(responseCode = "302", description = "如果提供了 user_code，将重定向到设备验证页面")
+            @ApiResponse(responseCode = "200", description = "返回设备验证信息"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误")
     })
     @GetMapping("/oauth2/activate")
-    public String activate(@Parameter(description = "用户码，用于设备授权流程")
+    public ResultData<Map<String, Object>> getActivateData(@Parameter(description = "用户码，用于设备授权流程")
                           @RequestParam(value = "user_code", required = false) String userCode) {
-        return StrUtil.isNotBlank(userCode) ? "redirect:/oauth2/device_verification?user_code=" + userCode : "device-activate";
+        Map<String, Object> data = new HashMap<>();
+        data.put("userCode", userCode);
+        data.put("verificationUrl", StrUtil.isNotBlank(userCode) 
+            ? "/oauth2/device_verification?user_code=" + userCode 
+            : "/oauth2/activate");
+        return ResultData.ok(data);
     }
 
     /**
-     * 设备验证成功页面
+     * 设备验证成功信息（前后端分离）
      *
-     * @return 验证成功页面
+     * @return 验证成功信息
      */
     @Operation(
-            summary = "设备验证成功页面",
-            description = "设备授权验证成功后显示的确认页面"
+            summary = "设备验证成功信息",
+            description = "前后端分离架构：返回设备授权验证成功的信息"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "返回设备验证成功页面视图")
+            @ApiResponse(responseCode = "200", description = "返回设备验证成功信息")
     })
     @GetMapping(value = "/oauth2/activated", params = "success")
-    public String activated() {
-        return "device-activated";
+    public ResultData<Map<String, Object>> getActivatedData() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", true);
+        data.put("message", "设备授权验证成功");
+        return ResultData.ok(data);
     }
 
     private static Set<ScopeWithDescription> withDescription(Set<String> scopes) {

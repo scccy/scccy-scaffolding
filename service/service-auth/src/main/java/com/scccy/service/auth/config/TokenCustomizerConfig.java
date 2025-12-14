@@ -1,27 +1,23 @@
 package com.scccy.service.auth.config;
 
 import com.scccy.common.modules.domain.mp.system.SysUserMp;
-import com.scccy.common.modules.dto.ResultData;
 import com.scccy.service.auth.fegin.SystemUserClient;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * OAuth2 Token 自定义配置
+ * OAuth2 Token 自定义器配置
  * <p>
- * 配置 Token 增强器，在 JWT Token 中携带用户信息和权限
+ * 用于在 JWT Token 中携带用户信息和权限
  *
  * @author scccy
  */
@@ -29,96 +25,98 @@ import java.util.List;
 @Configuration
 public class TokenCustomizerConfig {
 
-    @Autowired
+    @Resource
     private SystemUserClient systemUserClient;
 
+    /**
+     * JWT Token 自定义器
+     * <p>
+     * 在 Token 中添加用户 ID、用户名、权限等信息
+     *
+     * @return OAuth2TokenCustomizer
+     */
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
         return (context) -> {
             Authentication principal = context.getPrincipal();
             String username = principal.getName();
-            
-            log.debug("Token 自定义器处理: username={}, grantType={}", 
-                username, context.getAuthorizationGrantType());
-            
+
+            log.debug("开始自定义 JWT Token，用户名: {}", username);
+
             // 从系统服务获取用户信息
-            SysUserMp user = getUserInfo(username);
-            if (user == null) {
-                log.warn("无法获取用户信息: username={}", username);
-                // 如果无法获取用户信息，使用默认值
-                context.getClaims().claim("username", username);
-                context.getClaims().claim("authorities", Collections.emptyList());
-                return;
+            SysUserMp user = null;
+            try {
+                var result = systemUserClient.getByUserName(username);
+                if (result != null && result.getData() != null) {
+                    user = result.getData();
+                }
+            } catch (Exception e) {
+                log.warn("获取用户信息失败: {}", e.getMessage());
             }
-            
-            // 获取用户权限（目前先返回空列表，后续需要扩展 SystemUserClient 获取权限）
-            List<String> authorities = getUserAuthorities(username, user);
-            
+
             // 添加自定义 claims
-            context.getClaims().claim("username", user.getUserName());
+            if (user != null) {
+                // 添加用户ID
+                if (user.getUserId() != null) {
+                    context.getClaims().claim("userId", user.getUserId());
+                    log.debug("添加 userId: {}", user.getUserId());
+                }
+
+                // 添加用户名
+                context.getClaims().claim("username", user.getUserName());
+
+                // 添加昵称
+                if (user.getNickName() != null) {
+                    context.getClaims().claim("nickName", user.getNickName());
+                }
+
+                // 添加用户状态
+                if (user.getStatus() != null) {
+                    context.getClaims().claim("status", user.getStatus());
+                }
+            } else {
+                // 如果无法获取用户信息，至少添加用户名
+                context.getClaims().claim("username", username);
+            }
+
+            // 获取用户权限（暂时返回空列表，后续可以扩展）
+            List<String> authorities = getUserAuthorities(username, user);
             context.getClaims().claim("authorities", authorities);
-            
-            // 添加用户ID
-            if (user.getUserId() != null) {
-                context.getClaims().claim("userId", user.getUserId());
+            log.debug("添加 authorities: {}", authorities);
+
+            // 对于客户端凭证模式，可能需要特殊处理
+            if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
+                log.debug("客户端凭证模式，不添加用户信息");
+                // 客户端凭证模式通常不包含用户信息
             }
-            
-            // 添加昵称（可选）
-            if (user.getNickName() != null) {
-                context.getClaims().claim("nickName", user.getNickName());
-            }
-            
-            // 添加用户状态（可选）
-            if (user.getStatus() != null) {
-                context.getClaims().claim("status", user.getStatus());
-            }
-            
-            log.debug("Token claims 已设置: userId={}, username={}, authorities={}", 
-                user.getUserId(), user.getUserName(), authorities);
         };
     }
-    
+
     /**
-     * 从系统服务获取用户信息
-     */
-    private SysUserMp getUserInfo(String username) {
-        try {
-            ResultData<SysUserMp> result = systemUserClient.getByUserName(username);
-            if (result != null && result.getData() != null) {
-                return result.getData();
-            }
-        } catch (Exception e) {
-            log.error("获取用户信息失败: username={}, error={}", username, e.getMessage(), e);
-        }
-        return null;
-    }
-    
-    /**
-     * 获取用户权限
+     * 获取用户权限列表
      * <p>
-     * TODO: 后续需要扩展 SystemUserClient 添加获取用户权限的接口
-     * 目前先返回空列表，或者根据用户基本信息生成默认权限
+     * 通过 Feign 调用 service-system 获取用户权限
+     * 查询用户 → 角色 → 菜单权限的完整链路
+     * 返回权限列表，包含：
+     * - 角色标识：ROLE_ADMIN, ROLE_USER（Spring Security 标准格式）
+     * - 菜单权限：system:user:list, system:user:add（菜单 perms 字段）
      *
      * @param username 用户名
-     * @param user 用户信息
+     * @param user     用户信息（如果已获取，暂时未使用）
      * @return 权限列表
      */
     private List<String> getUserAuthorities(String username, SysUserMp user) {
-        // TODO: 调用 service-system 获取用户权限
-        // 返回权限列表，如：["USER_READ", "USER_WRITE", "ROLE_ADMIN"]
-        // 目前先返回默认权限
-        List<String> authorities = new ArrayList<>();
-        
-        // 可以根据用户状态或角色添加默认权限
-        if (user.getStatus() != null && user.getStatus() == 0) {
-            // 用户状态正常，添加基本权限
-            authorities.add("ROLE_USER");
+        try {
+            // 调用 service-system 获取用户权限
+            var result = systemUserClient.getUserAuthorities(username);
+            if (result != null && result.getData() != null) {
+                log.debug("获取用户权限成功: username={}, authorities={}", username, result.getData());
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.warn("获取用户权限失败: username={}, error={}", username, e.getMessage());
         }
-        
-        // 后续扩展：从权限表或角色表查询用户权限
-        // 例如：调用 systemUserClient.getUserAuthorities(username)
-        
-        return authorities;
+        return Collections.emptyList();
     }
 }
 

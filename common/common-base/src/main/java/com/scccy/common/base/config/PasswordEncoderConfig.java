@@ -16,6 +16,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class PasswordEncoderConfig {
 
     /**
+     * 默认构造函数
+     */
+    public PasswordEncoderConfig() {
+    }
+
+    /**
      * 密码加密器
      * 使用BCrypt算法，强度为12，确保安全性
      * 
