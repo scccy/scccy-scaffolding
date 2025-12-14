@@ -68,7 +68,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         FastJsonConfig config = new FastJsonConfig();
 
-		config.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        config.setDateFormat("yyyy-MM-dd' 'HH:mm:ss");
 
         config.setJSONB(true);
         config.setReaderFeatures(JSONReader.Feature.FieldBased,
